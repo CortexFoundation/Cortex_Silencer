@@ -9,7 +9,7 @@ class CVM:
             "param_address":defaultdict(lambda:None),
             "contract_address":defaultdict(lambda:None),
             "result":defaultdict(lambda:None),
-            "last_nonce":defaultdict(lambda:0)
+            "last_nonce":defaultdict(lambda:-1)
         }
     def verify(self,unpacked_transactions):
         self.new_state = self.state.copy()
@@ -43,5 +43,5 @@ class CVM:
                     "param_address":t["param_address"]
                 }
             if t["type"] == "contract_call":
-                result[t["contract_addr"]] = t["contract_address"]+t["input_address"]
+                result[t["from"]] = t["contract_address"]+t["input_address"]
         return self.new_state,None

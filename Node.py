@@ -5,6 +5,7 @@ from Block import Blockchain
 import os
 import json
 import time
+import random
 import threading
 def cmp(a,b):
         return a["nonce"]-b["nonce"]
@@ -36,7 +37,8 @@ class Node:
                 # submitted, we log it to our console
                 info = {}
                 contractType = new_txion["type"]
-                info["tx_hash"] = SHA256.new(data=(str(int(time.time()*1000))).encode()).hexdigest()
+                info["tx_hash"] = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
+                time.sleep(0.2)
                 if contractType == "tx":
                     assert("to" in new_txion.keys())
                     assert("amount" in new_txion.keys())
@@ -44,7 +46,7 @@ class Node:
                     assert("filename" in new_txion.keys())
                     f = request.files["file"]
                     p = os.path.join("model",new_txion["filename"])
-                    model_addr = SHA256.new(data=(str(int(time.time()*1000))).encode()).hexdigest()
+                    model_addr = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
                     f.save(p)
                     new_txion["model_addr"] = model_addr
                     new_txion["model_path"] = p
@@ -53,7 +55,7 @@ class Node:
                     assert("filename" in new_txion.keys())
                     f = request.files["file"]
                     p = os.path.join("param",new_txion["filename"])
-                    param_addr = SHA256.new(data=(str(int(time.time()*1000))).encode()).hexdigest()
+                    param_addr = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
                     f.save(p)
                     new_txion["param_addr"] = param_addr
                     new_txion["param_path"] = p
@@ -62,7 +64,7 @@ class Node:
                     assert("filename" in new_txion.keys())
                     f = request.files["file"]
                     p = os.path.join("input_data",new_txion["filename"])
-                    input_addr = SHA256.new(data=(str(int(time.time()*1000))).encode()).hexdigest()
+                    input_addr = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
                     f.save(p)
                     new_txion["input_addr"] = input_addr
                     new_txion["input_path"] = p
@@ -73,7 +75,7 @@ class Node:
                 elif contractType == "contract_create":
                     assert("model_address" in new_txion.keys())
                     assert("param_address" in new_txion.keys())
-                    contract_addr = SHA256.new(data=(str(int(time.time()*1000))).encode()).hexdigest()
+                    contract_addr = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
                     new_txion["contract_addr"] = contract_addr
                     info["contract_addr"] = contract_addr
                 else:
