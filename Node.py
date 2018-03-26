@@ -17,7 +17,7 @@ class Node:
         self.blockchain = Blockchain()
         self.lock = threading.Lock()
         self.miner_address = "0x0000000000000000000000000000000000000000001"
-        
+
 
         @self.node.route('/txion', methods=['POST'])
         def transaction():
@@ -88,9 +88,9 @@ class Node:
         @self.node.route('/mine', methods=['POST'])
         def mine():
             self.lock.acquire()
-            if len(self.unpacked_trasactions)==0:
-                self.lock.release()
-                return json.dumps({"msg":"error, there is no unpacked transaction"})
+            # if len(self.unpacked_trasactions)==0:
+                # self.lock.release()
+                # return json.dumps({"msg":"error, there is no unpacked transaction"})
             self.unpacked_trasactions = sorted(self.memory_pool[:],cmp=cmp)
             block_hash,err = self.blockchain.pack(self.unpacked_trasactions, self.miner_address)
             if not err:
@@ -109,7 +109,7 @@ class Node:
         @self.node.route('/getBlock',methods=['GET'])
         def getBlock():
             self.lock.acquire()
-            s = json.dumps(self.blockchain._chain)
+            s = json.dumps([i.getDict() for i in self.blockchain._chain])
             self.lock.release()
             return s
 if __name__ == "__main__":
