@@ -77,6 +77,8 @@ class Node:
                     assert("param_address" in new_txion.keys())
                     contract_addr = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
                     new_txion["contract_addr"] = contract_addr
+                    os.symlink("../"+self.blockchain.CVM.state["model_address"][new_txion["model_address"]],"./model_bind/%s-symbol.json"%contract_addr)
+                    os.symlink("../"+self.blockchain.CVM.state["param_address"][new_txion["param_address"]],"./model_bind/%s-0000.params"%contract_addr)
                     info["contract_addr"] = contract_addr
                 else:
                     self.lock.release()

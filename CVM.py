@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+import Inference
 class CVM:
     def __init__(self):
         self.state = {
@@ -7,16 +8,20 @@ class CVM:
             #address:file_path
             "model_address":defaultdict(lambda:None),
             "param_address":defaultdict(lambda:None),
+            "input_address":defaultdict(lambda:None),
             "contract_address":defaultdict(lambda:None),
             "result":defaultdict(lambda:None),
             "last_nonce":defaultdict(lambda:-1)
         }
+        self.inference_config = json.load(open("config.json","r"))
+        self.infer_obj = Inference.Inference(self.inference_config)
     def verify(self,unpacked_transactions):
         self.new_state = self.state.copy()
         account = self.new_state["account"]
         model_address = self.new_state["model_address"]
         param_address = self.new_state["param_address"]
         contract_address = self.new_state["contract_address"]
+        input_address = self.new_state["input_address"]
         result = self.new_state["result"]
         last_nonce = self.new_state["last_nonce"]
         for t in unpacked_transactions:
@@ -33,8 +38,8 @@ class CVM:
                 model_address[t["model_addr"]] = t["model_path"]
             if t["type"] == "param_data":
                 param_address[t["param_addr"]] = t["param_path"]
-            if t["type"] == "input_addr":
-                param_address[t["param_addr"]] = t["param_path"]
+            if t["type"] == "input_data":
+                input_address[t["input_addr"]] = t["input_path"]
             if t["type"] == "coinbase_tx":
                 account[t["miner_addr"]]+=100
             if t["type"] == "contract_create":
@@ -43,5 +48,8 @@ class CVM:
                     "param_address":t["param_address"]
                 }
             if t["type"] == "contract_call":
-                result[t["from"]] = t["contract_address"]+t["input_address"]
+                result[t["from"]] = self.inference("./model_bind/"+t["contract_address"],
+                input_address[t["input_address"]])
         return self.new_state,None
+    def inference(self,model_path,data_path):
+        return self.infer_obj.testSingleInference(model_path,data_path)

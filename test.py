@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 fp = open("Block.py",'rb')
 nonce = 0
 miner = "0x0000000000000000000000000000000000000000001"
@@ -14,28 +15,31 @@ def tx(f,to,amount):
     nonce+=1
     return requests.post("http://127.0.0.1:5000/txion",json={"type":"tx","from":f,"to":to,"amount":str(amount),"nonce":nonce})
 def uploadInput(f,filepath):
-    headers = {'Content-type': 'multipart/form-data'}
+    (tt,tempfilename) = os.path.split(filepath)
+    print tempfilename
     files = {
-        'json': ("json", json.dumps({"type":"input_data","from":f,"filename":filepath,"nonce":nonce}), 'application/json'),
-        'file': (filepath, open(filepath, 'rb'), 'application/octet-stream')
+        'json': ("json", json.dumps({"type":"input_data","from":f,"filename":tempfilename,"nonce":nonce}), 'application/json'),
+        'file': (tempfilename, open(filepath, 'rb'), 'application/octet-stream')
     }
     global nonce
     nonce+=1
     return requests.post("http://127.0.0.1:5000/txion",files = files)
 def uploadModel(f,filepath):
+    (tt,tempfilename) = os.path.split(filepath)
     headers = {'Content-type': 'multipart/form-data'}
     files = {
-        'json': ("json", json.dumps({"type":"model_data","from":f,"filename":filepath,"nonce":nonce}), 'application/json'),
-        'file': (filepath, open(filepath, 'rb'), 'application/octet-stream')
+        'json': ("json", json.dumps({"type":"model_data","from":f,"filename":tempfilename,"nonce":nonce}), 'application/json'),
+        'file': (tempfilename, open(filepath, 'rb'), 'application/octet-stream')
     }
     global nonce
     nonce+=1
     return requests.post("http://127.0.0.1:5000/txion",files = files)
 def uploadParam(f,filepath):
+    (tt,tempfilename) = os.path.split(filepath)
     headers = {'Content-type': 'multipart/form-data'}
     files = {
-        'json': ("json", json.dumps({"type":"param_data","from":f,"filename":filepath,"nonce":nonce}), 'application/json'),
-        'file': (filepath, open(filepath, 'rb'), 'application/octet-stream')
+        'json': ("json", json.dumps({"type":"param_data","from":f,"filename":tempfilename,"nonce":nonce}), 'application/json'),
+        'file': (tempfilename, open(filepath, 'rb'), 'application/octet-stream')
     }
     global nonce
     nonce+=1
@@ -52,13 +56,14 @@ def callContract(f,input_address,contract_address):
 if __name__ == "__main__":
     mine()
     tx(f=miner,to="0x0000000000000000000000000000000000000000001",amount=10)
-    model_info = uploadModel(miner,"model.test").json()
-    param_info = uploadParam(miner,"param.test").json()
-    input_info = uploadInput(miner,"input.test").json()
+    model_info = uploadModel(miner,"upload/Inception-BN-symbol.json").json()
+    param_info = uploadParam(miner,"upload/Inception-BN-0000.params").json()
+    input_info = uploadInput(miner,"upload/1.jpg").json()
     mine()
     contract_info = createContract(miner,model_address=model_info["info"]["model_addr"],param_address=param_info["info"]["param_addr"]).json()
     mine()
     # print contract_info.json()
+    print getState().json()
     callContract(miner,input_address=input_info["info"]["input_addr"],contract_address=contract_info["info"]["contract_addr"])
     mine()
     print getState().json()["result"][miner]
