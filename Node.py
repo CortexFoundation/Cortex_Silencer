@@ -1,5 +1,7 @@
-from flask import Flask,request
-from flask import request
+from flask import Flask, request, render_template_string, render_template,url_for,redirect
+from flask_sqlalchemy import SQLAlchemy
+from flask_user import login_required, UserManager, UserMixin
+from flask_user.signals import user_registered
 from Crypto.Hash import SHA256
 from Block import Blockchain
 import os
@@ -7,113 +9,199 @@ import json
 import time
 import random
 import threading
-def cmp(a,b):
+import uuid
+
+
+def get_addr():
+    seed = uuid.uuid4()
+    return SHA256.new(data=str(seed).encode()).hexdigest()
+
+def cmp(a, b):
         return a["nonce"]-b["nonce"]
+
+class ConfigClass(object):
+    """ Flask application config """
+
+    # Flask settings
+    SECRET_KEY='9EXzI8LJl6PLhWtuNPum9EXzI8LJl6PLhWtuNPum9EXzI8LJl6PLhWtuNPum9EXzI8LJl6PLhWtuNPum9EXzI8LJl6PLhWtuNPum'
+
+    # Flask-SQLAlchemy settings
+    # File-based SQL database
+    SQLALCHEMY_DATABASE_URI='mysql://root:123456@127.0.0.1/cortex'
+    SQLALCHEMY_TRACK_MODIFICATIONS=False    # Avoids SQLAlchemy warning
+
+    # Flask-User settings
+    # Shown in and email templates and page footers
+    USER_APP_NAME="Cortex miner sample"
+    USER_ENABLE_EMAIL=False      # Disable email authentication
+    USER_ENABLE_USERNAME=True    # Enable username authentication
+    USER_REQUIRE_RETYPE_PASSWORD=True    # Simplify register form
+
+def create_app():
+    """ Flask application factory """
+
+    # Create Flask app load app.config
+    app=Flask(__name__)
+    app.config.from_object(__name__+'.ConfigClass')
+
+    # Initialize Flask-SQLAlchemy
+    db=SQLAlchemy(app)
+
+    # Define the User data-model.
+    # NB: Make sure to add flask_user UserMixin !!!
+    class User(db.Model, UserMixin):
+        __tablename__='miner_sample_users'
+        id=db.Column(db.Integer, primary_key = True)
+        active=db.Column('is_active', db.Boolean(),
+                         nullable = False, server_default = '1')
+
+        # User authentication information. The collation='NOCASE' is required
+        # to search case insensitively when USER_IFIND_MODE is 'nocase_collation'.
+        username=db.Column(db.String(100), nullable = False, unique = True)
+        password=db.Column(db.String(255), nullable = False,
+                           server_default = '')
+        mineraddr=db.Column(db.String(255), nullable = True)
+
+    
+    @user_registered.connect_via(app)
+    def _track_registrations(sender, user, **extra):
+        user.mineraddr = get_addr()
+        db.session.commit()
+    # Create all database tables
+    db.create_all()
+
+    # Setup Flask-User and specify the User data-model
+    user_manager=UserManager(app, db, User)
+
+    # The Home page is accessible to anyone
+    @app.route('/')
+    def home_page():
+        # String-based templates
+        return render_template("home.html")
+
+    # The Members page is only accessible to authenticated users via the @login_required decorator
+    @app.route('/members')
+    @login_required    # User must be authenticated
+    def member_page():
+        # String-based templates
+        return render_template("member.html")
+
+    return app
+
 class Node:
     def __init__(self):
-        self.node = Flask(__name__)
-        #store unpacked trascations
-        self.unpacked_trasactions = []
-        self.memory_pool = []
-        self.blockchain = Blockchain()
-        self.lock = threading.Lock()
-        self.miner_address = "0x0000000000000000000000000000000000000000001"
+        self.node=create_app()
+        # store unpacked trascations
+        self.unpacked_trasactions=[]
+        self.db=SQLAlchemy(self.node)
+        self.memory_pool=[]
+        self.blockchain=Blockchain()
+        self.lock=threading.Lock()
+        self.miner_address="0x0000000000000000000000000000000000000000001"
 
-
-        @self.node.route('/txion', methods=['POST'])
+        @self.node.route('/txion', methods = ['POST'])
         def transaction():
             self.lock.acquire()
             if request.method == 'POST':
                 # On each new POST request,
                 # we extract the transaction data
-                new_txion = request.get_json()
+                new_txion=request.get_json()
                 if not new_txion:
-                    new_txion = json.load(request.files["json"])
+                    new_txion=json.load(request.files["json"])
                 assert("nonce" in new_txion.keys())
                 assert("from" in new_txion.keys())
                 # print new_txion
                 # Then we add the transaction to our list
                 # Because the transaction was successfully
                 # submitted, we log it to our console
-                info = {}
-                contractType = new_txion["type"]
-                info["tx_hash"] = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
+                info={}
+                contractType=new_txion["type"]
+                info["tx_hash"]=SHA256.new(
+                    data = (str(long(time.time()*1000))).encode()).hexdigest()
                 time.sleep(0.2)
                 if contractType == "tx":
                     assert("to" in new_txion.keys())
                     assert("amount" in new_txion.keys())
                 elif contractType == "model_data":
                     assert("filename" in new_txion.keys())
-                    f = request.files["file"]
-                    p = os.path.join("model",new_txion["filename"])
-                    model_addr = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
+                    f=request.files["file"]
+                    p=os.path.join("model", new_txion["filename"])
+                    model_addr=SHA256.new(
+                        data = (str(long(time.time()*1000))).encode()).hexdigest()
                     f.save(p)
-                    new_txion["model_addr"] = model_addr
-                    new_txion["model_path"] = p
-                    info["model_addr"] = model_addr
+                    new_txion["model_addr"]=model_addr
+                    new_txion["model_path"]=p
+                    info["model_addr"]=model_addr
                 elif contractType == "param_data":
                     assert("filename" in new_txion.keys())
-                    f = request.files["file"]
-                    p = os.path.join("param",new_txion["filename"])
-                    param_addr = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
+                    f=request.files["file"]
+                    p=os.path.join("param", new_txion["filename"])
+                    param_addr=SHA256.new(
+                        data = (str(long(time.time()*1000))).encode()).hexdigest()
                     f.save(p)
-                    new_txion["param_addr"] = param_addr
-                    new_txion["param_path"] = p
-                    info["param_addr"] = param_addr
+                    new_txion["param_addr"]=param_addr
+                    new_txion["param_path"]=p
+                    info["param_addr"]=param_addr
                 elif contractType == "input_data":
                     assert("filename" in new_txion.keys())
-                    f = request.files["file"]
-                    p = os.path.join("input_data",new_txion["filename"])
-                    input_addr = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
+                    f=request.files["file"]
+                    p=os.path.join("input_data", new_txion["filename"])
+                    input_addr=SHA256.new(
+                        data = (str(long(time.time()*1000))).encode()).hexdigest()
                     f.save(p)
-                    new_txion["input_addr"] = input_addr
-                    new_txion["input_path"] = p
-                    info["input_addr"] = input_addr
+                    new_txion["input_addr"]=input_addr
+                    new_txion["input_path"]=p
+                    info["input_addr"]=input_addr
                 elif contractType == "contract_call":
                     assert("input_address" in new_txion.keys())
                     assert("contract_address" in new_txion.keys())
                 elif contractType == "contract_create":
                     assert("model_address" in new_txion.keys())
                     assert("param_address" in new_txion.keys())
-                    contract_addr = SHA256.new(data=(str(long(time.time()*1000))).encode()).hexdigest()
-                    new_txion["contract_addr"] = contract_addr
-                    os.symlink("../"+self.blockchain.CVM.state["model_address"][new_txion["model_address"]],"./model_bind/%s-symbol.json"%contract_addr)
-                    os.symlink("../"+self.blockchain.CVM.state["param_address"][new_txion["param_address"]],"./model_bind/%s-0000.params"%contract_addr)
-                    info["contract_addr"] = contract_addr
+                    contract_addr=SHA256.new(
+                        data = (str(long(time.time()*1000))).encode()).hexdigest()
+                    new_txion["contract_addr"]=contract_addr
+                    os.symlink("../"+self.blockchain.CVM.state["model_address"]
+                               [new_txion["model_address"]], "./model_bind/%s-symbol.json" % contract_addr)
+                    os.symlink("../"+self.blockchain.CVM.state["param_address"]
+                               [new_txion["param_address"]], "./model_bind/%s-0000.params" % contract_addr)
+                    info["contract_addr"]=contract_addr
                 else:
                     self.lock.release()
-                    return json.dumps({"msg":"error, no such type"})
+                    return json.dumps({"msg": "error, no such type"})
                 # except Exception as ex:
                     # return json.dumps({"msg":"error "+str(ex)})
                 self.memory_pool.append(new_txion)
                 self.lock.release()
-                return json.dumps({"msg":"ok","info":info})
+                return json.dumps({"msg": "ok", "info": info})
             self.lock.release()
-        @self.node.route('/mine', methods=['POST'])
+        @self.node.route('/mine', methods = ['POST'])
         def mine():
             self.lock.acquire()
             # if len(self.unpacked_trasactions)==0:
                 # self.lock.release()
                 # return json.dumps({"msg":"error, there is no unpacked transaction"})
-            self.unpacked_trasactions = sorted(self.memory_pool[:],cmp=cmp)
-            block_hash,err = self.blockchain.pack(self.unpacked_trasactions, self.miner_address)
+            self.unpacked_trasactions=sorted(self.memory_pool[:], cmp = cmp)
+            block_hash, err=self.blockchain.pack(
+                self.unpacked_trasactions, self.miner_address)
             if not err:
-                self.memory_pool = self.memory_pool[len(self.unpacked_trasactions):]
+                self.memory_pool=self.memory_pool[len(
+                    self.unpacked_trasactions):]
                 self.lock.release()
-                return json.dumps({"msg":"ok"})
+                return json.dumps({"msg": "ok"})
             else:
                 self.lock.release()
-                return json.dumps({"msg":"error, %s"%err})
-        @self.node.route('/getStates',methods=['GET'])
+                return json.dumps({"msg": "error, %s" % err})
+        @self.node.route('/getStates', methods = ['GET'])
         def getStates():
             self.lock.acquire()
-            s = json.dumps(self.blockchain.CVM.state)
+            s=json.dumps(self.blockchain.CVM.state)
             self.lock.release()
             return s
-        @self.node.route('/getBlock',methods=['GET'])
+        @self.node.route('/getBlock', methods = ['GET'])
         def getBlock():
             self.lock.acquire()
-            s = json.dumps([i.getDict() for i in self.blockchain._chain])
+            s=json.dumps([i.getDict() for i in self.blockchain._chain])
             self.lock.release()
             return s
 if __name__ == "__main__":
