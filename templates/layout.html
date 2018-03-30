@@ -36,6 +36,7 @@
             <a href="{{ url_for('user.logout') }}">{%trans%}Sign out{%endtrans%}</a>
             {% else %}
             <a href="{{ url_for('user.login') }}">{%trans%}Sign in{%endtrans%}</a>
+            <a href="{{ url_for('user.register') }}">{%trans%}Register{%endtrans%}</a>
             {% endif %}
         </div>
     </div>
