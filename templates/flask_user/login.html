@@ -2,7 +2,8 @@
 
 {% block content %}
 {% from "flask_user/_macros.html" import render_field, render_checkbox_field, render_submit_field %}
-<h1>{%trans%}Sign in{%endtrans%}</h1>
+
+<h1 class="text-center" style="margin: 0 0 15px">{%trans%}Sign in{%endtrans%}</h1>
 
 <form action="" method="POST" class="form" role="form">
     {{ form.hidden_tag() }}
@@ -17,16 +18,16 @@
             </div>
             <div class="col-xs-6 text-right">
                 {% if user_manager.USER_ENABLE_REGISTER and not user_manager.USER_REQUIRE_INVITATION %}
-                    <a href="{{ url_for('user.register') }}" tabindex='190'>
-                        {%trans%}New here? Register.{%endtrans%}</a>
+                <a href="{{ url_for('user.register') }}" tabindex='190'>
+                    {%trans%}New here? Register.{%endtrans%}</a>
                 {% endif %}
             </div>
         </div>
         {{ field(class_='form-control', tabindex=110) }}
         {% if field.errors %}
-            {% for e in field.errors %}
-                <p class="help-block">{{ e }}</p>
-            {% endfor %}
+        {% for e in field.errors %}
+        <p class="help-block">{{ e }}</p>
+        {% endfor %}
         {% endif %}
     </div>
 
@@ -40,16 +41,16 @@
             </div>
             <div class="col-xs-6 text-right">
                 {% if user_manager.USER_ENABLE_FORGOT_PASSWORD %}
-                    <a href="{{ url_for('user.forgot_password') }}" tabindex='195'>
-                        {%trans%}Forgot your Password?{%endtrans%}</a>
+                <a href="{{ url_for('user.forgot_password') }}" tabindex='195'>
+                    {%trans%}Forgot your Password?{%endtrans%}</a>
                 {% endif %}
             </div>
         </div>
         {{ field(class_='form-control', tabindex=120) }}
         {% if field.errors %}
-            {% for e in field.errors %}
-                <p class="help-block">{{ e }}</p>
-            {% endfor %}
+        {% for e in field.errors %}
+        <p class="help-block">{{ e }}</p>
+        {% endfor %}
         {% endif %}
     </div>
 

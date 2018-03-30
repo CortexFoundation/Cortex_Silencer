@@ -1,9 +1,121 @@
 {% extends "layout.html" %}
-            {% block content %}
-                <h2>Home page</h2>
-                <p><a href={{ url_for('user.register') }}>Register</a></p>
-                <p><a href={{ url_for('user.login') }}>Sign in</a></p>
-                <p><a href={{ url_for('home_page') }}>Home page</a> (accessible to anyone)</p>
-                <p><a href={{ url_for('member_page') }}>Member page</a> (login required)</p>
-                <p><a href={{ url_for('user.logout') }}>Sign out</a></p>
-            {% endblock %}
+{% block content %}
+{% if call_or_get(current_user.is_authenticated) %}
+<div class="container account">
+    <h1>Account</h1>
+    <p><span>Address</span>0xe1379a2875E7c7D07ac333C1e0336D2EE816eEC8</p>
+    <p><span>Amount</span>10000</p>
+    <br>
+    <p>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#transfer">Transfer</button>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#call">Call</button>
+    </p>
+    <br>
+</div>
+{% endif %}
+<div class="container" id="blocks">
+    <h1>Blocks</h1>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Height</th>
+            <th>Age</th>
+            <th>Txn</th>
+            <th>Reward</th>
+        </tr>
+        </thead>
+        <tr>
+            <td><a href="" data-toggle="modal" data-target="#txn" onclick="getTxn(11111)">11111</a></td>
+            <td>22222</td>
+            <td>33333</td>
+            <td>44444</td>
+        </tr>
+    </table>
+</div>
+<div class="modal fade" id="transfer">
+    <div class="container">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title">Transfer</h4>
+            </div>
+            <div class="modal-body">
+                <label class="control-label inline">From:&nbsp;</label>
+                <input type="text" class="form-control inline" value="0xe1379a2875E7c7D07ac333C1e0336D2EE816eEC8" readonly><br><br>
+                <label class="control-label inline">To:&nbsp;</label>
+                <input type="text" class="form-control inline"><br><br>
+                <label class="control-label inline">Amount:&nbsp;</label>
+                <input type="text" class="form-control inline"><br><br>
+                <label class="control-label inline">Nonce:&nbsp;</label>
+                <input type="text" class="form-control inline"><br><br>
+                <button class="btn btn-primary" onclick="transfer()">Transfer</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="call">
+    <div class="container">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title">Call</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-xs-4"><img src="static/images/1.png" alt=""></div>
+                    <div class="col-xs-4"><img src="static/images/2.png" alt=""></div>
+                    <div class="col-xs-4"><img src="static/images/3.png" alt=""></div>
+                </div>
+                <div class="row" style="margin: 15px -15px">
+                    <label class="col-xs-4">
+                        <input type="radio" name="call" value="option1" checked> vgg16
+                    </label>
+                    <label class="col-xs-4">
+                        <input type="radio" name="call" value="option2"> vgg19
+                    </label>
+                    <label class="col-xs-4">
+                        <input type="radio" name="call" value="option2"> resnet152
+                    </label>
+                </div>
+                <button class="btn btn-primary" onclick="call()">Call</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="txn">
+    <div class="container">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title">Block height</h4>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Txn</th>
+                        <th>Type</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>value</th>
+                    </tr>
+                    </thead>
+                    <tr>
+                        <th>Txn</th>
+                        <th>Type</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>value</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

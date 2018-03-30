@@ -1,91 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ user_manager.USER_APP_NAME }}</title>
-
     <!-- Bootstrap -->
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
-
+    <link href="/static/style.css" rel="stylesheet">
     <!-- In-lining styles to avoid needing a separate .css file -->
-    <style>
-        hr { border-color: #cccccc; margin: 0; }
-        .no-margins { margin: 0px; }
-        .with-margins { margin: 10px; }
-        .col-centered { float: none; margin: 0 auto; }
-    </style>
-
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
-      <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.js"></script>
-      <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.js"></script>
     <![endif]-->
 
     {# *** Allow sub-templates to insert extra html to the head section *** #}
     {% block extra_css %}{% endblock %}
-  </head>
+</head>
 
 
 <body>
-    {% block body %}
-    <div id="header-div" class="clearfix with-margins">
-        <div class="pull-left"><a href="/"><h1 class="no-margins">{{ user_manager.USER_APP_NAME }}</h1></a></div>
-        <div class="pull-right">
+{% block body %}
+<!--<div class="pull-left"><a href="/"><h1 class="no-margins">{{ user_manager.USER_APP_NAME }}</h1></a></div>-->
+<div class="header">
+    <div class="container">
+        <div class="pull-left">
+            <a href="/" class="logo">Cortex Miner Sample</a>
+        </div>
+        <div class="pull-right" style="margin-right: -15px">
             {% if call_or_get(current_user.is_authenticated) %}
-                <a href="{{ url_for('user.edit_user_profile') }}">{{ current_user.username or current_user.email }}</a>
-                &nbsp; | &nbsp;
-                <a href="{{ url_for('user.logout') }}">{%trans%}Sign out{%endtrans%}</a>
+            <a href="#">{{ current_user.username or current_user.email }}</a>   
+            <a href="{{ url_for('user.logout') }}">{%trans%}Sign out{%endtrans%}</a>
             {% else %}
-                <a href="{{ url_for('user.login') }}">{%trans%}Sign in{%endtrans%}</a>
+            <a href="{{ url_for('user.login') }}">{%trans%}Sign in{%endtrans%}</a>
             {% endif %}
         </div>
     </div>
-    {% block menu %}
-    <div id="menu-div" class="with-margins">
-        <a href="/">{%trans%}Home page{%endtrans%}</a>
-    </div>
-    {% endblock %}
-    <hr class="no-margins"/>
+</div>
+{% block menu %}
+{% endblock %}
 
-    <div id="main-div" class="with-margins">
+<div id="main-div" class="with-margins">
     {# One-time system messages called Flash messages #}
     {% block flash_messages %}
-        {%- with messages = get_flashed_messages(with_categories=true) -%}
-            {% if messages %}
-                {% for category, message in messages %}
-                    {% if category=='error' %}
-                        {% set category='danger' %}
-                    {% endif %}
-                    <div class="alert alert-{{category}}">{{ message|safe }}</div>
-                {% endfor %}
-            {% endif %}
-        {%- endwith %}
+    {%- with messages = get_flashed_messages(with_categories=true) -%}
+    {% if messages %}
+    {% for category, message in messages %}
+    {% if category=='error' %}
+    {% set category='danger' %}
+    {% endif %}
+    <div class="alert alert-{{category}}">{{ message|safe }}</div>
+    {% endfor %}
+    {% endif %}
+    {%- endwith %}
     {% endblock %}
 
     {% block main %}
-        {% block content %}{% endblock %}
+    {% block content %}{% endblock %}
     {% endblock %}
-    </div>
+</div>
 
-    <br/>
-    <hr class="no-margins"/>
-    <div id="footer-div" class="clearfix with-margins">
-        <div class="pull-left">{{ user_manager.USER_APP_NAME }} v1.0</div>
-        <div class="pull-right">&copy; 2014 MyCorp</div>
-    </div>
-    {% endblock %}
+<div class="footer" style="position: fixed;bottom: 0">
+    <div class="container">©️ 2018 Cortexlabs.ai</div>
+</div>
+{% endblock %}
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+{# *** Allow sub-templates to insert extra html to the bottom of the body *** #}
+{% block extra_js %}{% endblock %}
 
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-    <!-- Bootstrap -->
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 
-    {# *** Allow sub-templates to insert extra html to the bottom of the body *** #}
-    {% block extra_js %}{% endblock %}
+</body>
+<script>
+    $('body').css('min-height', window.innerHeight);
+    function getBlocks() {
+        $.ajax('块接口', function (data) {
+            if (data) {
+                for (var i in data) {
+                    $('#blocks table').append('<tr>' +
+                        '<td><a href="#" data-toggle="modal" data-target="#txn" onclick="getTxn(height)">height</a></td>' +
+                        '<td>age</td>' +
+                        '<td>txn</td>' +
+                        '<td>reward</td>' +
+                        '</tr>')
+                }
+            }
+        })
+    }
+    getBlocks();
+    setInterval(function () {
+        getBlocks();
+    }, 15000);
+    function getTxn(height) {
+        $.ajax('交易记录接口', function (data) {
+            if (data){
+                for (var i in data){
+                    if (type == tx){
+                        $('#txn table').append('<tr>' +
+                            '<td>txn</td>' +
+                            '<td>type</td>' +
+                            '<td>from</td>' +
+                            '<td>to</td>' +
+                            '<td>value</td>' +
+                            '</tr>')
+                    }else {
+                        $('#txn table').append('<tr>' +
+                            '<td>txn</td>' +
+                            '<td>type</td>' +
+                            '<td>from<br>from</td>' +
+                            '<td>to<br>to</td>' +
+                            '<td>value<br>value</td>' +
+                            '</tr>')
+                    }
 
-  </body>
+                }
+            }
+        })
+    }
+    function transfer() {
+        var from = $('#transfer input').eq(0).val();
+        var to = $('#transfer input').eq(1).val();
+        var amount = $('#transfer input').eq(2).val();
+        var nonce = $('#transfer input').eq(3).val();
+        $.post('tx接口',{from:from,to:to,amount:amount,nonce:nonce},function () {
+            alert();
+        })
+    }
+    function call() {
+        for (var i in $('input[type=radio]')){
+            if ($('input[type=radio]')[i].checked){
+                console.log($('input[type=radio]').eq(i).val());
+                $.post('call接口',function () {
+                    alert()
+                })
+            }
+        }
+    }
+    function alert() {
+        $('.alert').show();
+        setTimeout(function () {
+            $('.alert').hide()
+        })
+    }
+</script>
 </html>

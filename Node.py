@@ -41,7 +41,7 @@ def create_app():
     """ Flask application factory """
 
     # Create Flask app load app.config
-    app=Flask(__name__)
+    app=Flask(__name__,static_url_path='/static')
     app.config.from_object(__name__+'.ConfigClass')
 
     # Initialize Flask-SQLAlchemy
@@ -205,4 +205,4 @@ class Node:
             self.lock.release()
             return s
 if __name__ == "__main__":
-    Node().node.run()
+    Node().node.run(host='0.0.0.0')
