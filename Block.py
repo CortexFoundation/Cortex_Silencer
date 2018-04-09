@@ -41,7 +41,7 @@ class Blockchain(object):
         return Block(
                 index =0,
                 timestamp = int(time.time()*1000),
-                data = json.dumps([]),
+                data = [],
                 previous_hash = "0",
                 nonce = 0)
     def add_block(self,data):
@@ -62,11 +62,11 @@ class Blockchain(object):
         return self._chain[-1]
     def pack(self,unpaced_transactions, miner_address):
         temp_tx = [i for i in unpaced_transactions]
-        temp_tx.append({"type":"coinbase_tx","miner_addr":miner_address})
+        temp_tx.append({"type":"coinbase_tx","miner_addr":miner_address,"reward":5})
         new_state, err = self.CVM.verify(temp_tx)
         if err:
             return None,err
-        return self.add_block(json.dumps(temp_tx)),None
+        return self.add_block(temp_tx),None
 
     def proof_of_work(self,header):
         target = 2**250

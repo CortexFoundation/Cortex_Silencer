@@ -4,7 +4,7 @@ import Inference
 class CVM:
     def __init__(self):
         self.state = {
-            "account":defaultdict(lambda: 0),
+            "account":defaultdict(lambda: 10000),
             #address:file_path
             "model_address":defaultdict(lambda:None),
             "param_address":defaultdict(lambda:None),

@@ -64,12 +64,12 @@
     {% endblock %}
 </div>
 
-<div class="footer" style="position: fixed;bottom: 0">
+<div class="footer" style="position: fixed;bottom: 0;background: #fff">
     <div class="container">©️ 2018 Cortexlabs.ai</div>
 </div>
 {% endblock %}
 
-<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 
 {# *** Allow sub-templates to insert extra html to the bottom of the body *** #}
@@ -81,16 +81,17 @@
 <script>
     $('body').css('min-height', window.innerHeight);
     function getBlocks() {
-        $.ajax('块接口', function (data) {
+        $.get('http://47.52.39.170:5000/getBlock', function (data) {
             if (data) {
-                for (var i in data) {
-                    $('#blocks table').append('<tr>' +
-                        '<td><a href="#" data-toggle="modal" data-target="#txn" onclick="getTxn(height)">height</a></td>' +
-                        '<td>age</td>' +
-                        '<td>txn</td>' +
-                        '<td>reward</td>' +
+		$('#blocks table tbody').empty();
+	        for (var i =0;i<data.length;i++) {
+                    $('#blocks table tbody').append('<tr>' +
+                        '<td><a href="#" data-toggle="modal" data-target="#txn" onclick="getTxn('+data[i].index+')">'+data[i].index+'</a></td>' +
+                        '<td>'+new Date(data[i].timestamp)+'</td>' +
+                        '<td>'+data[i].data.length+'</td>' +
+                        '<td>5</td>' +
                         '</tr>')
-                }
+	        }
             }
         })
     }
@@ -99,7 +100,7 @@
         getBlocks();
     }, 15000);
     function getTxn(height) {
-        $.ajax('交易记录接口', function (data) {
+        $.get('', function (data) {
             if (data){
                 for (var i in data){
                     if (type == tx){
@@ -129,25 +130,17 @@
         var to = $('#transfer input').eq(1).val();
         var amount = $('#transfer input').eq(2).val();
         var nonce = $('#transfer input').eq(3).val();
-        $.post('tx接口',{from:from,to:to,amount:amount,nonce:nonce},function () {
-            alert();
+        $.post('',{from:from,to:to,amount:amount,nonce:nonce}, function () {
         })
     }
     function call() {
         for (var i in $('input[type=radio]')){
             if ($('input[type=radio]')[i].checked){
                 console.log($('input[type=radio]').eq(i).val());
-                $.post('call接口',function () {
-                    alert()
+                $.post('',function () {
                 })
             }
         }
-    }
-    function alert() {
-        $('.alert').show();
-        setTimeout(function () {
-            $('.alert').hide()
-        })
     }
 </script>
 </html>

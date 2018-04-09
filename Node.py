@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template_string, render_template,url_for,redirect
+from flask import Flask, request, render_template_string, render_template,url_for,redirect,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import login_required, UserManager, UserMixin
 from flask_user.signals import user_registered
@@ -175,23 +175,6 @@ class Node:
                 self.lock.release()
                 return json.dumps({"msg": "ok", "info": info})
             self.lock.release()
-        @self.node.route('/mine', methods = ['POST'])
-        def mine():
-            self.lock.acquire()
-            # if len(self.unpacked_trasactions)==0:
-                # self.lock.release()
-                # return json.dumps({"msg":"error, there is no unpacked transaction"})
-            self.unpacked_trasactions=sorted(self.memory_pool[:], cmp = cmp)
-            block_hash, err=self.blockchain.pack(
-                self.unpacked_trasactions, self.miner_address)
-            if not err:
-                self.memory_pool=self.memory_pool[len(
-                    self.unpacked_trasactions):]
-                self.lock.release()
-                return json.dumps({"msg": "ok"})
-            else:
-                self.lock.release()
-                return json.dumps({"msg": "error, %s" % err})
         @self.node.route('/getStates', methods = ['GET'])
         def getStates():
             self.lock.acquire()
@@ -201,8 +184,39 @@ class Node:
         @self.node.route('/getBlock', methods = ['GET'])
         def getBlock():
             self.lock.acquire()
-            s=json.dumps([i.getDict() for i in self.blockchain._chain])
+            result = []
+            start = len(self.blockchain._chain)-10
+            if start<0:
+                start = 0
+            for i in range(len(self.blockchain._chain)-1,start,-1):
+                result.append(self.blockchain._chain[i].getDict())
+            print(result)
+            s=jsonify(result)
             self.lock.release()
             return s
+    def mine(self):
+        self.lock.acquire()
+        # if len(self.unpacked_trasactions)==0:
+            # self.lock.release()
+            # return json.dumps({"msg":"error, there is no unpacked transaction"})
+        self.unpacked_trasactions=sorted(self.memory_pool[:], cmp = cmp)
+        block_hash, err=self.blockchain.pack(
+            self.unpacked_trasactions, self.miner_address)
+        if not err:
+            self.memory_pool=self.memory_pool[len(
+                self.unpacked_trasactions):]
+            self.lock.release()
+            return json.dumps({"msg": "ok"})
+        else:
+            self.lock.release()
+            return json.dumps({"msg": "error, %s" % err})
+def mine(node):
+    while True:
+        node.mine()
+        time.sleep(10)
 if __name__ == "__main__":
-    Node().node.run(host='0.0.0.0')
+    node = Node()
+    mine_thread = threading.Thread(target=mine,args=(node,))
+    mine_thread.setDaemon(True)
+    mine_thread.start()
+    node.node.run(host='0.0.0.0')
