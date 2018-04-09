@@ -22,13 +22,13 @@
 </head>
 
 
-<body>
+<body style='padding-bottom: 70px'>
 {% block body %}
 <!--<div class="pull-left"><a href="/"><h1 class="no-margins">{{ user_manager.USER_APP_NAME }}</h1></a></div>-->
 <div class="header">
     <div class="container">
         <div class="pull-left">
-            <a href="/" class="logo">Cortex Miner Sample</a>
+            <a href="/" class="logo">Cortex Chain Sample</a>
         </div>
         <div class="pull-right" style="margin-right: -15px">
             {% if call_or_get(current_user.is_authenticated) %}
@@ -80,17 +80,38 @@
 </body>
 <script>
     $('body').css('min-height', window.innerHeight);
+    var mineraddr = '{{current_user.mineraddr}}';
+    var mineramount;
+    var blockurl = '';
+    if (mineraddr) {
+	$('.mineraddr').html(mineraddr);
+	blockurl = 'getBlock?address='+mineraddr;
+	//$.post('/account?address='+mineraddr, function(data){
+	//    if (data) {
+	//	$('.mineramount').append(data.account);
+	//    }
+	//});
+    }else {
+	blockurl = 'getBlock';
+    }
+    var txn = {};
     function getBlocks() {
-        $.get('http://47.52.39.170:5000/getBlock', function (data) {
+        $.get('/'+blockurl, function (data) {
             if (data) {
+		$('.mineramount').html(data.account);
+		mineramount = data.account;
 		$('#blocks table tbody').empty();
-	        for (var i =0;i<data.length;i++) {
+	        for (var i =0;i<data.block.length;i++) {
+		    if (data.block[i].data.length>0){
+			data.block[i].data.length = data.block[i].data.length-1;
+		    }
                     $('#blocks table tbody').append('<tr>' +
-                        '<td><a href="#" data-toggle="modal" data-target="#txn" onclick="getTxn('+data[i].index+')">'+data[i].index+'</a></td>' +
-                        '<td>'+new Date(data[i].timestamp)+'</td>' +
-                        '<td>'+data[i].data.length+'</td>' +
+                        '<td><a href="#" data-toggle="modal" data-target="#txn" onclick="getTxn('+data.block[i].index+')">'+data.block[i].index+'</a></td>' +
+                        '<td>'+new Date(data.block[i].timestamp)+'</td>' +
+                        '<td>'+data.block[i].data.length+'</td>' +
                         '<td>5</td>' +
-                        '</tr>')
+                        '</tr>');
+		    txn[data.block[i].index] = data.block[i].data;
 	        }
             }
         })
@@ -100,47 +121,103 @@
         getBlocks();
     }, 15000);
     function getTxn(height) {
-        $.get('', function (data) {
-            if (data){
-                for (var i in data){
-                    if (type == tx){
-                        $('#txn table').append('<tr>' +
-                            '<td>txn</td>' +
-                            '<td>type</td>' +
-                            '<td>from</td>' +
-                            '<td>to</td>' +
-                            '<td>value</td>' +
-                            '</tr>')
-                    }else {
-                        $('#txn table').append('<tr>' +
-                            '<td>txn</td>' +
-                            '<td>type</td>' +
-                            '<td>from<br>from</td>' +
-                            '<td>to<br>to</td>' +
-                            '<td>value<br>value</td>' +
-                            '</tr>')
-                    }
-
-                }
-            }
-        })
+	$('.blockheight').append(height);
+	$('#txn table tbody').empty();
+	var data = txn[height];
+	for (var i in data){
+	    if (data[i].type=='tx'||data[i].type=='call'){
+		$('#txn table tbody').append('<tr>' +
+                '<td>'+data[i].tx_hash+'</td>' +
+                '<td>'+data[i].type+'</td>' +
+                '<td>'+data[i].from+'</td>' +
+                '<td>'+data[i].to+'</td>' +
+                '<td>'+data[i].amount+'</td>' +
+                '<td>'+data[i].comment+'</td>' +
+                '</tr>')
+	    }
+        }
     }
     function transfer() {
+	$('.transfer').addClass('disabled');
         var from = $('#transfer input').eq(0).val();
         var to = $('#transfer input').eq(1).val();
         var amount = $('#transfer input').eq(2).val();
-        var nonce = $('#transfer input').eq(3).val();
-        $.post('',{from:from,to:to,amount:amount,nonce:nonce}, function () {
-        })
+	var reg = /^[0-9a-f]{64}$/;
+	if (!reg.test(to)){
+	    alert('Please fill in the correct address!');
+	    $('.transfer').removeClass('disabled');
+	    return
+	}
+	if (amount<=0){
+	    alert('Amount cannot be less than 0');
+	    $('.transfer').removeClass('disabled');
+            return
+	}
+	if (amount>mineramount){
+	    alert('Insufficient balance!');
+	    $('.transfer').removeClass('disabled');
+	    return
+	}
+	var parma = {
+	    'nonce': 0,
+            'from': from,
+            'type': 'tx',
+            'to': to,
+            'amount': amount
+	}
+	$.ajax({
+	    url:'/txion',
+	    type: 'POST',
+	    data: JSON.stringify(parma),
+	    dataType: 'json',
+	    contentType: 'application/json',
+	    success: function(data){
+		if(data.msg=='ok'){
+		    $('.msg').show();
+		    setTimeout(function(){
+			$('.msg').hide();
+			$('#transfer').modal('hide');
+			$('.transfer').removeClass('disabled');
+		    }, 1000)
+		}
+	    }
+	})
+    }
+    var input = '327e12772d8d08bd5ef1936b58e445535dbef23da3b8001a0eed01efa8e50de0';
+    var model = '6d4bd32d506d845101b5a2da140a4ce69dafa1035958d7344fd22f842ee1c2b3';
+    function getInput(x){
+	input = x;
+    }
+    function getModel(x){
+        model = x;
     }
     function call() {
-        for (var i in $('input[type=radio]')){
-            if ($('input[type=radio]')[i].checked){
-                console.log($('input[type=radio]').eq(i).val());
-                $.post('',function () {
-                })
-            }
-        }
+	$('.call').addClass('disabled');
+	var parma = {
+	    from: mineraddr,
+	    to: 'DefaultContract',
+	    input: input+'.png',
+	    model: model,
+	    type: 'call',
+	    nonce: 0
+	}
+        $.ajax({
+	    url: '/txion',
+	    type: 'POST',
+	    data: JSON.stringify(parma),
+	    dataType: 'json',
+	    contentType: 'application/json',
+	    success: function (data){
+		if(data.msg=='ok'){
+                    $('.msg').show();
+                    setTimeout(function(){
+                        $('.msg').hide();
+                        $('#call').modal('hide');
+			$('.call').removeClass('disabled');
+                    }, 1000)
+                }
+	    }
+	})
     }
 </script>
 </html>

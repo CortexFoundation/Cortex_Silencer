@@ -27,11 +27,15 @@ class CVM:
         for t in unpacked_transactions:
             if t["type"] == "tx":
                 if account[t["from"]]<int(t["amount"]):
-                    return None,"transaction %s is invalid, not enough cortex"%t["tx_hash"]
+                    continue
+                    #return None,"transaction %s is invalid, not enough cortex"%t["tx_hash"]
                 if int(t["amount"])<0:
-                    return None, "transaction %s is invalid, amount need to be not negative"%t["tx_hash"]
+                    continue
+                    #return None, "transaction %s is invalid, amount need to be not negative"%t["tx_hash"]
                 if int(t["nonce"])<=last_nonce[t["from"]]:
-                    return None, "transaction %s is invalid, nonce should be ascending "%t["tx_hash"]
+                    
+                    t["nonce"] = last_nonce[t["from"]]+1
+                    #return None, "transaction %s is invalid, nonce should be ascending "%t["tx_hash"]
                 account[t["from"]]-=int(t["amount"])
                 account[t["to"]]+=int(t["amount"])
             if t["type"] == "model_data":
@@ -50,6 +54,19 @@ class CVM:
             if t["type"] == "contract_call":
                 result[t["from"]] = self.inference("./model_bind/"+t["contract_address"],
                 input_address[t["input_address"]])
+            if t["type"] == "call":
+                t["amount"] = 0
+                t["comment"] = self.inference("./model_bind/"+t["model"], "./input_data/"+t["input"])
+                if t["comment"] == "standard schnauzer":
+                    account[t["from"]]+=5
+                    t["amount"] = 5
+                if t["comment"] == "hummingbird":
+                    account[t["from"]]+=10
+                    t["amount"] = 10
+                if t["comment"] == "tabby, tabby cat":
+                    account[t["from"]]+=1
+                    t["amount"] = 1
+                print(t["comment"])
         return self.new_state,None
     def inference(self,model_path,data_path):
         return self.infer_obj.testSingleInference(model_path,data_path)

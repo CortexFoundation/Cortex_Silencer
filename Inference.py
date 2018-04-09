@@ -9,18 +9,42 @@ import json
 import time
 import os
 import random
+def parse_js(expr):
+    import ast
+    m = ast.parse(expr)
+    a = m.body[0]
+
+    def parse(node):
+        if isinstance(node, ast.Expr):
+            return parse(node.value)
+        elif isinstance(node, ast.Num):
+            return node.n
+        elif isinstance(node, ast.Str):
+            return node.s
+        elif isinstance(node, ast.Name):
+            return node.id
+        elif isinstance(node, ast.Dict):
+            return dict(zip(map(parse, node.keys), map(parse, node.values)))
+        elif isinstance(node, ast.List):
+            return map(parse, node.elts)
+        else:
+            raise NotImplementedError(node.__class__)
+
+    return parse(a)
 class Inference:
     def __init__(self,config):
-        self.map = open("map.txt",'r').read()
+        self.map = open("map_clsloc.txt",'r').read()
 	self.map = self.map.split('\n')
 	for i in range(len(self.map)-1):
-            self.map[i] = self.map[i].split(' ')[1]
+            self.map[i] = self.map[i].split(' ')[2]
+        self.map = parse_js(open("gistfile1.txt",'r').read())
         self.batchsize = config["batchsize"]
         self.model_names = config["models"]
         self.img_dir = config["img_dir"]
         self.result_dir = config["result_dir"]
         self.model_dir = config["model_dir"]
         self.models = config["models"]
+        self.model_list = {}
 
     def getImage(self,name):
         #fetch image
@@ -144,7 +168,9 @@ class Inference:
         json.dump(self.cpu_infer_time,open(os.path.join(self.result_dir,"cpu_infer_time_%d.json"%self.batchsize),'w'),indent=2)
         json.dump(self.gpu_infer_time,open(os.path.join(self.result_dir,"gpu_infer_time_%d.json"%self.batchsize),'w'),indent=2)
     
-    def testSingleInference(self,model,data,t="gpu"):
-        mod,load_model_time = self.loadModel(os.path.join(model),type=t)
-        return str(self.predictSingle(data,mod)[0])
+    def testSingleInference(self,model,data,t="cpu"):
+        if model not in self.model_list.keys():
+            mod,load_model_time = self.loadModel(os.path.join(model),type=t)
+            self.model_list[model] = mod
+        return str(self.predictSingle(data,self.model_list[model])[0])
             

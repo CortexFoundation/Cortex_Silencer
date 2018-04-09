@@ -4,6 +4,7 @@ import datetime as date
 from CVM import CVM
 import time
 import json
+from collections import defaultdict
 class Block:
     def __init__(self, index, previous_hash, timestamp, data, nonce):
         self.index = index
@@ -33,6 +34,7 @@ class Block:
 class Blockchain(object):
     def __init__(self):
         self._chain = [self.create_genesis_block()]
+        self._chain_name = defaultdict(lambda:[])
         self.CVM = CVM()
     # ...blockchain
     def create_genesis_block(self):
@@ -51,14 +53,21 @@ class Blockchain(object):
         previous_hash = last_block.hash
         header = str(new_index) + str(new_timestamp) + str(data) + str(previous_hash)
         hash_result,nonce = self.proof_of_work(header)
-        self._chain.append(
-            Block(
+        b = Block(
                 index = new_index,
                 timestamp = new_timestamp,
                 data = data,
                 previous_hash = previous_hash,
                 nonce = nonce)
-        )
+        self._chain.append(b)
+        visit = defaultdict(lambda:False)
+        for t in data:
+            if "from" in t.keys() and not visit[t["from"]]:
+                self._chain_name[t["from"]].append(b)
+                visit[t["from"]] = True
+            if "to" in t.keys() and not visit[t["to"]]:
+                self._chain_name[t["to"]].append(b)
+                visit[t["to"]] = True
         return self._chain[-1]
     def pack(self,unpaced_transactions, miner_address):
         temp_tx = [i for i in unpaced_transactions]

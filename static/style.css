@@ -120,6 +120,17 @@ thead tr {
     border-top: 1px solid #ddd;
 }
 
+.msg{
+    display: none;
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    margin-left: -150px;
+    width: 300px;
+    text-align: center;
+    z-index: 9999;
+}
+
 @media (max-width: 768px) {
     label.inline {
         text-align: left;

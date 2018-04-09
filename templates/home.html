@@ -3,8 +3,8 @@
 {% if call_or_get(current_user.is_authenticated) %}
 <div class="container account">
     <h1>Account</h1>
-    <p><span>Address</span>0xe1379a2875E7c7D07ac333C1e0336D2EE816eEC8</p>
-    <p><span>Amount</span>10000</p>
+    <p><span>Address</span><b class='mineraddr'></b></p>
+    <p><span>Amount</span><b class='mineramount'></b></p>
     <br>
     <p>
         <button class="btn btn-primary" data-toggle="modal" data-target="#transfer">Transfer</button>
@@ -16,7 +16,14 @@
 <div class="container" id="blocks">
     <h1>Blocks</h1>
     <table class="table">
-	<thead><tr><th>Height</th><th>Age</th><th>Txn</th><th>Reward</th></tr></thead>
+	<thead>
+	    <tr>
+		<th>Height</th>
+		<th>Age</th>
+		<th>Tx#</th>
+		<th>Reward</th>
+	    </tr>
+	</thead>
 	<tbody></tbody>
     </table>
 </div>
@@ -31,14 +38,14 @@
             </div>
             <div class="modal-body">
                 <label class="control-label inline">From:&nbsp;</label>
-                <input type="text" class="form-control inline" value="0xe1379a2875E7c7D07ac333C1e0336D2EE816eEC8" readonly><br><br>
+                <input type="text" class="form-control inline" value="{{current_user.mineraddr}}" readonly><br><br>
                 <label class="control-label inline">To:&nbsp;</label>
                 <input type="text" class="form-control inline"><br><br>
                 <label class="control-label inline">Amount:&nbsp;</label>
-                <input type="text" class="form-control inline"><br><br>
-                <label class="control-label inline">Nonce:&nbsp;</label>
-                <input type="text" class="form-control inline"><br><br>
-                <button class="btn btn-primary" onclick="transfer()">Transfer</button>
+                <input type="number" class="form-control inline"><br><br>
+                <!--<label class="control-label inline">Nonce:&nbsp;</label>
+                <input type="text" class="form-control inline"><br><br>-->
+                <button class="btn btn-primary transfer" onclick="transfer()">Transfer</button>
             </div>
         </div>
     </div>
@@ -53,23 +60,59 @@
                 <h4 class="modal-title">Call</h4>
             </div>
             <div class="modal-body">
+		<label class="control-label inline">From:&nbsp;</label>
+                <input type="text" class="form-control inline" value="{{current_user.mineraddr}}" readonly><br><br>
+		<label class="control-label inline">To:&nbsp;</label>
+                <input type="text" class="form-control inline" value="DefaultContract" readonly><br><br>
+		<pre>
+contract DefaultContract{ 
+ mapping(address=>uint) account;
+
+ //other code
+ ....
+ 
+ //classify type of picture
+ function animalClassification(address input, address model){
+  //get infer result
+  var result = keccak256(infer(input, model));
+
+  //reward according to your choice
+  if (result == keccrak256("hummingbird"))
+   account[msg.sender] += 10
+  else if (result == keccrak256("standard schnauzer")) //standard schnauzer is dog
+   account[msg.sender] += 5
+  else if (result == keccrak256("tabby, tabby cat"))
+   account[msg.sender] += 1
+    }
+
+
+ //other code
+ ....
+}
+		</pre>
                 <div class="row">
-                    <div class="col-xs-4"><img src="static/images/1.png" alt=""></div>
-                    <div class="col-xs-4"><img src="static/images/2.png" alt=""></div>
-                    <div class="col-xs-4"><img src="static/images/3.png" alt=""></div>
+                    <label class="col-xs-4" onclick="getInput('327e12772d8d08bd5ef1936b58e445535dbef23da3b8001a0eed01efa8e50de0')">
+			<img src="static/images/1.png" alt=""><input type="radio" name="input" checked>
+		    </label>
+                    <label class="col-xs-4" onclick="getInput('2035256b3362f76baa041560ba622bb50086b4feed93ab642d357587b6d3a01c')">
+			<img src="static/images/2.png" alt=""><input type="radio" name="input">
+		    </label>
+                    <label class="col-xs-4" onclick="getInput('f489902a0aa9622917550bbd612674fc149b2121d26af2e88022597e024317cd')">
+			<img src="static/images/3.png" alt=""><input type="radio" name="input">
+		    </label>
                 </div>
                 <div class="row" style="margin: 15px -15px">
-                    <label class="col-xs-4">
-                        <input type="radio" name="call" value="option1" checked> vgg16
+                    <label class="col-xs-4" onclick="getModel('6d4bd32d506d845101b5a2da140a4ce69dafa1035958d7344fd22f842ee1c2b3')">
+                        <input type="radio" name="model" checked> vgg16
                     </label>
-                    <label class="col-xs-4">
-                        <input type="radio" name="call" value="option2"> vgg19
+                    <label class="col-xs-4" onclick="getModel('2840ccd67199743a7a3f64e5fd51e5a44470373845c5e08bc0fbd96b41ce2aa0')">
+                        <input type="radio" name="model"> vgg19
                     </label>
-                    <label class="col-xs-4">
-                        <input type="radio" name="call" value="option2"> resnet152
+                    <label class="col-xs-4" onclick="getModel('5a1531e06f72a40f579ee450293cef6f1175fa96d767df03b4fc94d6722fc5f9')">
+                        <input type="radio" name="model"> resnet152
                     </label>
                 </div>
-                <button class="btn btn-primary" onclick="call()">Call</button>
+                <button class="btn btn-primary call" onclick="call()">Call</button>
             </div>
         </div>
     </div>
@@ -81,29 +124,27 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                     &times;
                 </button>
-                <h4 class="modal-title">Block height</h4>
+                <h4 class="modal-title blockheight">Block </h4>
             </div>
             <div class="modal-body">
+		<div style="width: 100%;overflow-x: auto">
                 <table class="table">
                     <thead>
                     <tr>
-                        <th>Txn</th>
+                        <th>Tx</th>
                         <th>Type</th>
                         <th>From</th>
                         <th>To</th>
-                        <th>value</th>
+                        <th>Value</th>
+			<th>Comment</th>
                     </tr>
                     </thead>
-                    <tr>
-                        <th>Txn</th>
-                        <th>Type</th>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>value</th>
-                    </tr>
+		    <tbody></tbody>
                 </table>
+		</div>
             </div>
         </div>
     </div>
 </div>
+<div class="alert alert-success msg">Please wait for packaging the transaction!</div>
 {% endblock %}

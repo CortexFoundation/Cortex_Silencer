@@ -32,7 +32,7 @@ class ConfigClass(object):
 
     # Flask-User settings
     # Shown in and email templates and page footers
-    USER_APP_NAME="Cortex miner sample"
+    USER_APP_NAME="Cortex chain sample"
     USER_ENABLE_EMAIL=False      # Disable email authentication
     USER_ENABLE_USERNAME=True    # Enable username authentication
     USER_REQUIRE_RETYPE_PASSWORD=True    # Simplify register form
@@ -98,14 +98,20 @@ class Node:
         self.blockchain=Blockchain()
         self.lock=threading.Lock()
         self.miner_address="0x0000000000000000000000000000000000000000001"
-
+        @self.node.route('/account', methods = ['POST'])
+        def getAccount():
+            if request.method == "POST":
+                addr = request.args.get("address")
+                print(addr)
+                return jsonify({"status":"ok","account":self.blockchain.CVM.state["account"][addr]})
         @self.node.route('/txion', methods = ['POST'])
         def transaction():
             self.lock.acquire()
             if request.method == 'POST':
                 # On each new POST request,
                 # we extract the transaction data
-                new_txion=request.get_json()
+                new_txion=request.get_json(force=True)
+                print(new_txion) 
                 if not new_txion:
                     new_txion=json.load(request.files["json"])
                 assert("nonce" in new_txion.keys())
@@ -116,9 +122,11 @@ class Node:
                 # submitted, we log it to our console
                 info={}
                 contractType=new_txion["type"]
-                info["tx_hash"]=SHA256.new(
-                    data = (str(long(time.time()*1000))).encode()).hexdigest()
-                time.sleep(0.2)
+                new_txion["tx_hash"]=SHA256.new(
+                    data = (str(long(time.time()*1000))+str(new_txion)+str(random.random())).encode()).hexdigest()
+
+                info["tx_hash"] = new_txion["tx_hash"]
+                new_txion["comment"] = ""
                 if contractType == "tx":
                     assert("to" in new_txion.keys())
                     assert("amount" in new_txion.keys())
@@ -155,6 +163,9 @@ class Node:
                 elif contractType == "contract_call":
                     assert("input_address" in new_txion.keys())
                     assert("contract_address" in new_txion.keys())
+                elif contractType == "call":
+                    assert("input" in new_txion.keys())
+                    assert("model" in new_txion.keys())
                 elif contractType == "contract_create":
                     assert("model_address" in new_txion.keys())
                     assert("param_address" in new_txion.keys())
@@ -173,7 +184,7 @@ class Node:
                     # return json.dumps({"msg":"error "+str(ex)})
                 self.memory_pool.append(new_txion)
                 self.lock.release()
-                return json.dumps({"msg": "ok", "info": info})
+                return jsonify({"msg": "ok", "info": info})
             self.lock.release()
         @self.node.route('/getStates', methods = ['GET'])
         def getStates():
@@ -184,16 +195,26 @@ class Node:
         @self.node.route('/getBlock', methods = ['GET'])
         def getBlock():
             self.lock.acquire()
-            result = []
-            start = len(self.blockchain._chain)-10
-            if start<0:
-                start = 0
-            for i in range(len(self.blockchain._chain)-1,start,-1):
-                result.append(self.blockchain._chain[i].getDict())
-            print(result)
-            s=jsonify(result)
-            self.lock.release()
-            return s
+            addr = request.args.get("address")
+            if addr:
+                result = []
+                start = -1
+                for i in range(len(self.blockchain._chain_name[addr])-1,start,-1):
+                    result.append(self.blockchain._chain_name[addr][i].getDict())
+                s = jsonify({"block":result,"account":self.blockchain.CVM.state["account"][addr]})
+                self.lock.release()
+                return s
+            else:
+                result = [] 
+                start = len(self.blockchain._chain)-11
+                if start<-1:
+                    start = -1
+                for i in range(len(self.blockchain._chain)-1,start,-1):
+                    result.append(self.blockchain._chain[i].getDict())
+                print(result)
+                s=jsonify({"block":result,"account":0})
+                self.lock.release()
+                return s
     def mine(self):
         self.lock.acquire()
         # if len(self.unpacked_trasactions)==0:
