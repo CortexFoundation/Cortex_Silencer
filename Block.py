@@ -4,6 +4,7 @@ import datetime as date
 from CVM import CVM
 import time
 import json
+import threading
 from collections import defaultdict
 class Block:
     def __init__(self, index, previous_hash, timestamp, data, nonce):
@@ -36,6 +37,7 @@ class Blockchain(object):
         self._chain = [self.create_genesis_block()]
         self._chain_name = defaultdict(lambda:[])
         self.CVM = CVM()
+        self.mutex = threading.Lock()
     # ...blockchain
     def create_genesis_block(self):
         # Manually construct a block with
@@ -46,7 +48,8 @@ class Blockchain(object):
                 data = [],
                 previous_hash = "0",
                 nonce = 0)
-    def add_block(self,data):
+    def add_block(self,data,state):
+        self.mutex.acquire()
         last_block = self._chain[-1]
         new_index = self._chain[-1].index+1
         new_timestamp = int(time.time()*1000)
@@ -68,6 +71,9 @@ class Blockchain(object):
             if "to" in t.keys() and not visit[t["to"]]:
                 self._chain_name[t["to"]].append(b)
                 visit[t["to"]] = True
+        json.dump(self._chain[-1].getDict(),open("./blockchain/%d.json"%(len(self._chain)-1),"w"),indent=2)
+        json.dump(state,open("./blockchain/%d_state.json"%(len(self._chain)-1),"w"),indent=2)
+        self.mutex.release()
         return self._chain[-1]
     def pack(self,unpaced_transactions, miner_address):
         temp_tx = [i for i in unpaced_transactions]
@@ -75,7 +81,7 @@ class Blockchain(object):
         new_state, err = self.CVM.verify(temp_tx)
         if err:
             return None,err
-        return self.add_block(temp_tx),None
+        return self.add_block(temp_tx,new_state),None
 
     def proof_of_work(self,header):
         target = 2**250

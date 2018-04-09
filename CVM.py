@@ -2,17 +2,20 @@ import json
 from collections import defaultdict
 import Inference
 class CVM:
-    def __init__(self):
-        self.state = {
-            "account":defaultdict(lambda: 10000),
-            #address:file_path
-            "model_address":defaultdict(lambda:None),
-            "param_address":defaultdict(lambda:None),
-            "input_address":defaultdict(lambda:None),
-            "contract_address":defaultdict(lambda:None),
-            "result":defaultdict(lambda:None),
-            "last_nonce":defaultdict(lambda:-1)
-        }
+    def __init__(self,fname=None):
+        if fname:
+            pass
+        else:
+            self.state = {
+                "account":defaultdict(lambda: 10000),
+                #address:file_path
+                "model_address":defaultdict(lambda:None),
+                "param_address":defaultdict(lambda:None),
+                "input_address":defaultdict(lambda:None),
+                "contract_address":defaultdict(lambda:None),
+                "result":defaultdict(lambda:None),
+                "last_nonce":defaultdict(lambda:-1)
+            }
         self.inference_config = json.load(open("config.json","r"))
         self.infer_obj = Inference.Inference(self.inference_config)
     def verify(self,unpacked_transactions):

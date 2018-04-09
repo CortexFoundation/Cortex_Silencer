@@ -77,11 +77,11 @@ contract DefaultContract{
   var result = keccak256(infer(input, model));
 
   //reward according to your choice
-  if (result == keccrak256("hummingbird"))
+  if (result == keccak256("hummingbird"))
    account[msg.sender] += 10
-  else if (result == keccrak256("standard schnauzer")) //standard schnauzer is dog
+  else if (result == keccak256("standard schnauzer")) //standard schnauzer is dog
    account[msg.sender] += 5
-  else if (result == keccrak256("tabby, tabby cat"))
+  else if (result == keccak256("tabby, tabby cat"))
    account[msg.sender] += 1
     }
 
