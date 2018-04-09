@@ -3,7 +3,21 @@ from collections import defaultdict
 import Inference
 class CVM:
     def __init__(self,fname=None):
+            self.state = {
+                "account":defaultdict(lambda: 10000),
+                #address:file_path
+                "model_address":defaultdict(lambda:None),
+                "param_address":defaultdict(lambda:None),
+                "input_address":defaultdict(lambda:None),
+                "contract_address":defaultdict(lambda:None),
+                "result":defaultdict(lambda:None),
+                "last_nonce":defaultdict(lambda:-1)
+            }
         if fname:
+            temp_state = json.load(open(fname,"r"))
+            self.state = {}
+            for k in temp_state.keys():
+                self.state[k] = temp_state[k]
             pass
         else:
             self.state = {
