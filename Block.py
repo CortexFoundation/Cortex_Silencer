@@ -5,6 +5,7 @@ from CVM import CVM
 import time
 import json
 import threading
+import yaml
 from collections import defaultdict
 class Block:
     def __init__(self, index, previous_hash, timestamp, data, nonce):
@@ -26,7 +27,7 @@ class Block:
         return {
             "index":self.index,
             "previous_hash":self.previous_hash,
-            "timestamp":int(self.timestamp),
+            "timestamp":self.timestamp,
             "data":self.data,
             "nonce":self.nonce,
             "hash":self.hash
@@ -38,24 +39,25 @@ class Blockchain(object):
             self._chain = [self.create_genesis_block()]
             self._chain_name = defaultdict(lambda:[])
             self.CVM = CVM()
+            json.dump(self._chain[-1].getDict(),open("./blockchain/%d.json"%(len(self._chain)-1),"w"),indent=2)
         else:
             self._chain = []
             self._chain_name = defaultdict(lambda:[])
-            for i in range(0,end):
-                tmp_res = json.load(open("./blockchain/"+str(i)+".json","r"))
+            for i in range(0,end+1):
+                tmp_res = yaml.safe_load(open("./blockchain/"+str(i)+".json","r"))
                 b = Block(tmp_res["index"],tmp_res["previous_hash"],tmp_res["timestamp"],tmp_res["data"],tmp_res["nonce"])
-                assert(b.hash == tmp_res["hash"])
+                b.hash = tmp_res["hash"]
                 self._chain.append(b)
                 visit = defaultdict(lambda:False)
-                for t in data:
+                for t in b.data:
                     if "from" in t.keys() and not visit[t["from"]]:
                         self._chain_name[t["from"]].append(b)
                         visit[t["from"]] = True
                     if "to" in t.keys() and not visit[t["to"]]:
                         self._chain_name[t["to"]].append(b)
                         visit[t["to"]] = True
-            self.CVM = CVM("./blockchain/"+str(end-1)+"_state.json")
-            
+            self.CVM = CVM("./blockchain/"+str(end)+"_state.json")
+             
         self.mutex = threading.Lock()
     # ...blockchain
     def create_genesis_block(self):
@@ -92,6 +94,7 @@ class Blockchain(object):
                 visit[t["to"]] = True
         json.dump(self._chain[-1].getDict(),open("./blockchain/%d.json"%(len(self._chain)-1),"w"),indent=2)
         json.dump(state,open("./blockchain/%d_state.json"%(len(self._chain)-1),"w"),indent=2)
+        print("dump %d\n"%(len(self._chain)-1))
         self.mutex.release()
         return self._chain[-1]
     def pack(self,unpaced_transactions, miner_address):

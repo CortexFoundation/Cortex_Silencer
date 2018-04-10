@@ -2,6 +2,7 @@ from flask import Flask, request, render_template_string, render_template,url_fo
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import login_required, UserManager, UserMixin
 from flask_user.signals import user_registered
+import sys
 from Crypto.Hash import SHA256
 from Block import Blockchain
 import os
@@ -89,20 +90,19 @@ def create_app():
     return app
 
 class Node:
-    def __init__(self):
+    def __init__(self,end = None):
         self.node=create_app()
         # store unpacked trascations
         self.unpacked_trasactions=[]
         self.db=SQLAlchemy(self.node)
         self.memory_pool=[]
-        self.blockchain=Blockchain()
+        self.blockchain=Blockchain(end)
         self.lock=threading.Lock()
         self.miner_address="0x0000000000000000000000000000000000000000001"
         @self.node.route('/account', methods = ['POST'])
         def getAccount():
             if request.method == "POST":
                 addr = request.args.get("address")
-                print(addr)
                 return jsonify({"status":"ok","account":self.blockchain.CVM.state["account"][addr]})
         @self.node.route('/txion', methods = ['POST'])
         def transaction():
@@ -111,7 +111,6 @@ class Node:
                 # On each new POST request,
                 # we extract the transaction data
                 new_txion=request.get_json(force=True)
-                print(new_txion) 
                 if not new_txion:
                     new_txion=json.load(request.files["json"])
                 assert("nonce" in new_txion.keys())
@@ -211,7 +210,6 @@ class Node:
                     start = -1
                 for i in range(len(self.blockchain._chain)-1,start,-1):
                     result.append(self.blockchain._chain[i].getDict())
-                print(result)
                 s=jsonify({"block":result,"account":0})
                 self.lock.release()
                 return s
@@ -236,7 +234,10 @@ def mine(node):
         node.mine()
         time.sleep(10)
 if __name__ == "__main__":
-    node = Node()
+    if len(sys.argv)==1:
+    	node = Node()
+    else:
+        node = Node(int(sys.argv[1]))
     mine_thread = threading.Thread(target=mine,args=(node,))
     mine_thread.setDaemon(True)
     mine_thread.start()
