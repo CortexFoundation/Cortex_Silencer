@@ -9,6 +9,7 @@ import json
 import time
 import os
 import random
+#parse json file
 def parse_js(expr):
     import ast
     m = ast.parse(expr)
@@ -33,9 +34,10 @@ def parse_js(expr):
     return parse(a)
 class Inference:
     def __init__(self,config):
+        #map define each class name
         self.map = open("map_clsloc.txt",'r').read()
-	self.map = self.map.split('\n')
-	for i in range(len(self.map)-1):
+        self.map = self.map.split('\n')
+        for i in range(len(self.map)-1):
             self.map[i] = self.map[i].split(' ')[2]
         self.map = parse_js(open("gistfile1.txt",'r').read())
         self.batchsize = config["batchsize"]
@@ -56,7 +58,7 @@ class Inference:
         img = np.swapaxes(img, 0, 2)
         img = np.swapaxes(img, 1, 2)
         return img
-
+    #load model
     def loadModel(self,name,type="cpu",gpu_id = 0):
         begin = time.time()
         sym, arg_params, aux_params = mx.model.load_checkpoint(name, 0)
@@ -65,7 +67,7 @@ class Inference:
         mod.set_params(arg_params, aux_params, allow_missing=True)
         end = time.time()
         return mod,end-begin
-
+    #predict
     def predict(self,names,mod):
         imgs = []
         for name in names:
@@ -77,6 +79,7 @@ class Inference:
         prob = mod.get_outputs()[0].asnumpy()
         end = time.time()
         return end-begin
+    #predict single image
     def predictSingle(self,name,mod):
         imgs = []
         img = self.getImage(name)
@@ -88,14 +91,13 @@ class Inference:
         end = time.time()
         return self.map[np.argmax(prob)], end-begin
 
-    
-
+    #get file size    
     def getFileSize(self,filePath):
         # filePath = unicode(filePath,'utf8')
         fsize = os.path.getsize(filePath)
         fsize = fsize/float(1024*1024)
         return round(fsize,2)
-
+    #remove invalid data
     def rmInvalidData(self,rm_img = False):
         if rm_img:
             predict_files = []
@@ -111,7 +113,7 @@ class Inference:
         for filename in os.listdir(self.img_dir):
             if filename.endswith("jpg") or filename.endswith("jpeg") or filename.endswith(".png") or filename.endswith(".gif"):
                 self.predict_files.append(filename)
-
+    #load model for cortex test
     def loadModelTest(self):
         self.cpu_model_list = []
         self.gpu_model_list = []
@@ -138,6 +140,7 @@ class Inference:
             )
         json.dump(self.cpu_model_time,open(os.path.join(self.result_dir,"gpu_model_time.json"),'w'),indent=2)
         json.dump(self.gpu_model_time,open(os.path.join(self.result_dir,"gpu_model_time.json"),'w'),indent=2)
+    #test inference performance
     def testInference(self,times = 10000):
         self.cpu_infer_time = []
         self.gpu_infer_time = []
@@ -167,7 +170,7 @@ class Inference:
                 print i,self.gpu_model_time[j]["model_name"],t
         json.dump(self.cpu_infer_time,open(os.path.join(self.result_dir,"cpu_infer_time_%d.json"%self.batchsize),'w'),indent=2)
         json.dump(self.gpu_infer_time,open(os.path.join(self.result_dir,"gpu_infer_time_%d.json"%self.batchsize),'w'),indent=2)
-    
+    #test single inference
     def testSingleInference(self,model,data,t="cpu"):
         if model not in self.model_list.keys():
             mod,load_model_time = self.loadModel(os.path.join(model),type=t)

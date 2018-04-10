@@ -7,6 +7,7 @@ import json
 import threading
 import yaml
 from collections import defaultdict
+#define block
 class Block:
     def __init__(self, index, previous_hash, timestamp, data, nonce):
         self.index = index
@@ -15,7 +16,7 @@ class Block:
         self.data = data
         self.nonce = nonce
         self.hash = self.hash_block()
-
+    #get block hash
     def hash_block(self):
         sha = SHA256.new((str(self.index) +
         str(self.timestamp) +
@@ -23,6 +24,8 @@ class Block:
         str(self.previous_hash) +
         str(self.nonce)).encode())
         return sha.hexdigest()
+
+    #transfer block to dict
     def getDict(self):
         return {
             "index":self.index,
@@ -32,15 +35,15 @@ class Block:
             "nonce":self.nonce,
             "hash":self.hash
         }
-
+#Blockchain
 class Blockchain(object):
     def __init__(self,end=None):
-        if not end:
+        if not end:                 
             self._chain = [self.create_genesis_block()]
-            self._chain_name = defaultdict(lambda:[])
+            self._chain_name = defaultdict(lambda:[])   #_chain_name save the blocks involved by each address
             self.CVM = CVM()
             json.dump(self._chain[-1].getDict(),open("./blockchain/%d.json"%(len(self._chain)-1),"w"),indent=2)
-        else:
+        else:       #if end!=None means load chain data from ./blockchain/0-end.json
             self._chain = []
             self._chain_name = defaultdict(lambda:[])
             for i in range(0,end+1):
@@ -49,6 +52,7 @@ class Blockchain(object):
                 b.hash = tmp_res["hash"]
                 self._chain.append(b)
                 visit = defaultdict(lambda:False)
+                #add each involved block to self._chain_name[address]
                 for t in b.data:
                     if "from" in t.keys() and not visit[t["from"]]:
                         self._chain_name[t["from"]].append(b)
@@ -69,6 +73,8 @@ class Blockchain(object):
                 data = [],
                 previous_hash = "0",
                 nonce = 0)
+
+    # add new block
     def add_block(self,data,state):
         self.mutex.acquire()
         last_block = self._chain[-1]
@@ -84,6 +90,7 @@ class Blockchain(object):
                 previous_hash = previous_hash,
                 nonce = nonce)
         self._chain.append(b)
+        # update _chain_name
         visit = defaultdict(lambda:False)
         for t in data:
             if "from" in t.keys() and not visit[t["from"]]:
@@ -97,6 +104,8 @@ class Blockchain(object):
         print("dump %d\n"%(len(self._chain)-1))
         self.mutex.release()
         return self._chain[-1]
+    
+    #verify and pack the transactions into a block
     def pack(self,unpaced_transactions, miner_address):
         temp_tx = [i for i in unpaced_transactions]
         temp_tx.append({"type":"coinbase_tx","miner_addr":miner_address,"reward":5})
@@ -104,7 +113,8 @@ class Blockchain(object):
         if err:
             return None,err
         return self.add_block(temp_tx,new_state),None
-
+        
+    #miner
     def proof_of_work(self,header):
         target = 2**250
         nonce = 0

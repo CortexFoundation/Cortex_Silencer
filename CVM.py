@@ -1,6 +1,7 @@
 import json
 from collections import defaultdict
 import Inference
+import DefaultContract
 class CVM:
     def __init__(self,fname=None):
         #CVM state
@@ -39,7 +40,7 @@ class CVM:
                 #"transaction %s is invalid, not enough cortex"%t["tx_hash"]
                 if account[t["from"]]<int(t["amount"]):
                     continue
-		#"transaction %s is invalid, amount need to be not negative"%t["tx_hash"]
+		        #"transaction %s is invalid, amount need to be not negative"%t["tx_hash"]
                 if int(t["amount"])<0:
                     continue
                 #"transaction %s is invalid, nonce should be ascending "%t["tx_hash"]
@@ -65,21 +66,12 @@ class CVM:
             if t["type"] == "contract_call":
                 result[t["from"]] = self.inference("./model_bind/"+t["contract_address"],
                 input_address[t["input_address"]])
-            
+                
             #this instruction is for specific contract "Default Contract"
             if t["type"] == "call":
-                t["amount"] = 0
-                t["comment"] = self.inference("./model_bind/"+t["model"], "./input_data/"+t["input"])
-                if t["comment"] == "standard schnauzer":
-                    account[t["from"]]+=5
-                    t["amount"] = 5
-                if t["comment"] == "hummingbird":
-                    account[t["from"]]+=10
-                    t["amount"] = 10
-                if t["comment"] == "tabby, tabby cat":
-                    account[t["from"]]+=1
-                    t["amount"] = 1
+                DefaultContract.Run(account,t,self)
         return self.new_state,None
-    
+        
+    #inference instruction
     def inference(self,model_path,data_path):
         return self.infer_obj.testSingleInference(model_path,data_path)

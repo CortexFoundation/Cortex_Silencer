@@ -126,9 +126,11 @@ class Node:
 
                 info["tx_hash"] = new_txion["tx_hash"]
                 new_txion["comment"] = ""
+                #transfer ctxc
                 if contractType == "tx":
                     assert("to" in new_txion.keys())
                     assert("amount" in new_txion.keys())
+                #update model 
                 elif contractType == "model_data":
                     assert("filename" in new_txion.keys())
                     f=request.files["file"]
@@ -139,6 +141,7 @@ class Node:
                     new_txion["model_addr"]=model_addr
                     new_txion["model_path"]=p
                     info["model_addr"]=model_addr
+                #update param
                 elif contractType == "param_data":
                     assert("filename" in new_txion.keys())
                     f=request.files["file"]
@@ -149,6 +152,7 @@ class Node:
                     new_txion["param_addr"]=param_addr
                     new_txion["param_path"]=p
                     info["param_addr"]=param_addr
+                #update input_data
                 elif contractType == "input_data":
                     assert("filename" in new_txion.keys())
                     f=request.files["file"]
@@ -159,12 +163,15 @@ class Node:
                     new_txion["input_addr"]=input_addr
                     new_txion["input_path"]=p
                     info["input_addr"]=input_addr
+                #call contract for user-define input_data
                 elif contractType == "contract_call":
                     assert("input_address" in new_txion.keys())
                     assert("contract_address" in new_txion.keys())
+                #call specific contract Default Contract
                 elif contractType == "call":
                     assert("input" in new_txion.keys())
                     assert("model" in new_txion.keys())
+                #create new contract
                 elif contractType == "contract_create":
                     assert("model_address" in new_txion.keys())
                     assert("param_address" in new_txion.keys())
@@ -179,18 +186,19 @@ class Node:
                 else:
                     self.lock.release()
                     return json.dumps({"msg": "error, no such type"})
-                # except Exception as ex:
-                    # return json.dumps({"msg":"error "+str(ex)})
+                    
                 self.memory_pool.append(new_txion)
                 self.lock.release()
                 return jsonify({"msg": "ok", "info": info})
             self.lock.release()
+        #get state data
         @self.node.route('/getStates', methods = ['GET'])
         def getStates():
             self.lock.acquire()
             s=json.dumps(self.blockchain.CVM.state)
             self.lock.release()
             return s
+        #get block data
         @self.node.route('/getBlock', methods = ['GET'])
         def getBlock():
             self.lock.acquire()
@@ -213,6 +221,7 @@ class Node:
                 s=jsonify({"block":result,"account":0})
                 self.lock.release()
                 return s
+    #mine
     def mine(self):
         self.lock.acquire()
         # if len(self.unpacked_trasactions)==0:
@@ -229,6 +238,7 @@ class Node:
         else:
             self.lock.release()
             return json.dumps({"msg": "error, %s" % err})
+# mine a new block. because the miner may use much resource, we only use a low difficulty and sleep for about 10 seconds. 
 def mine(node):
     while True:
         node.mine()
