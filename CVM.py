@@ -3,33 +3,21 @@ from collections import defaultdict
 import Inference
 class CVM:
     def __init__(self,fname=None):
-            self.state = {
-                "account":defaultdict(lambda: 10000),
-                #address:file_path
-                "model_address":defaultdict(lambda:None),
-                "param_address":defaultdict(lambda:None),
-                "input_address":defaultdict(lambda:None),
-                "contract_address":defaultdict(lambda:None),
-                "result":defaultdict(lambda:None),
-                "last_nonce":defaultdict(lambda:-1)
-            }
+        self.state = {
+            "account":defaultdict(lambda: 10000),
+            #address:file_path
+            "model_address":defaultdict(lambda:None),
+            "param_address":defaultdict(lambda:None),
+            "input_address":defaultdict(lambda:None),
+            "contract_address":defaultdict(lambda:None),
+            "result":defaultdict(lambda:None),
+            "last_nonce":defaultdict(lambda:-1)
+        }
         if fname:
             temp_state = json.load(open(fname,"r"))
-            self.state = {}
             for k in temp_state.keys():
-                self.state[k] = temp_state[k]
-            pass
-        else:
-            self.state = {
-                "account":defaultdict(lambda: 10000),
-                #address:file_path
-                "model_address":defaultdict(lambda:None),
-                "param_address":defaultdict(lambda:None),
-                "input_address":defaultdict(lambda:None),
-                "contract_address":defaultdict(lambda:None),
-                "result":defaultdict(lambda:None),
-                "last_nonce":defaultdict(lambda:-1)
-            }
+                for k1,v1 in temp_state.items():
+                    self.state[k][k1] = v1
         self.inference_config = json.load(open("config.json","r"))
         self.infer_obj = Inference.Inference(self.inference_config)
     def verify(self,unpacked_transactions):

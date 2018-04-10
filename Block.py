@@ -33,10 +33,29 @@ class Block:
         }
 
 class Blockchain(object):
-    def __init__(self):
-        self._chain = [self.create_genesis_block()]
-        self._chain_name = defaultdict(lambda:[])
-        self.CVM = CVM()
+    def __init__(self,end=None):
+        if not end:
+            self._chain = [self.create_genesis_block()]
+            self._chain_name = defaultdict(lambda:[])
+            self.CVM = CVM()
+        else:
+            self._chain = []
+            self._chain_name = defaultdict(lambda:[])
+            for i in range(0,end):
+                tmp_res = json.load(open("./blockchain/"+str(i)+".json","r"))
+                b = Block(tmp_res["index"],tmp_res["previous_hash"],tmp_res["timestamp"],tmp_res["data"],tmp_res["nonce"])
+                assert(b.hash == tmp_res["hash"])
+                self._chain.append(b)
+                visit = defaultdict(lambda:False)
+                for t in data:
+                    if "from" in t.keys() and not visit[t["from"]]:
+                        self._chain_name[t["from"]].append(b)
+                        visit[t["from"]] = True
+                    if "to" in t.keys() and not visit[t["to"]]:
+                        self._chain_name[t["to"]].append(b)
+                        visit[t["to"]] = True
+            self.CVM = CVM("./blockchain/"+str(end-1)+"_state.json")
+            
         self.mutex = threading.Lock()
     # ...blockchain
     def create_genesis_block(self):
