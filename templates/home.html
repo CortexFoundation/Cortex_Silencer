@@ -20,8 +20,9 @@
 	    <tr>
 		<th>Height</th>
 		<th>Age</th>
+		<th>Miner Address</th>
 		<th>Tx#</th>
-		<th>Reward</th>
+		<th>Miner Reward</th>
 	    </tr>
 	</thead>
 	<tbody></tbody>
@@ -66,31 +67,30 @@
                 <input type="text" class="form-control inline" value="DefaultContract" readonly><br><br>
 		<pre>
 contract DefaultContract{ 
- mapping(address=>uint) account;
+  mapping(address=>uint) account;
 
- //other code
- ....
+  //other code
+  ....
  
- //classify type of picture
- function animalClassification(address input, address model){
-  //get infer result
-  var result = keccak256(infer(input, model));
+  //classify type of picture
+  function animalClassification(address input, address model){
+    //get infer result
+    var result = keccak256(infer(input, model));
 
-  //reward according to your choice
-  if (result == keccak256("hummingbird"))
-   account[msg.sender] += 10
-  else if (result == keccak256("standard schnauzer")) //standard schnauzer is dog
-   account[msg.sender] += 5
-  else if (result == keccak256("tabby, tabby cat"))
-   account[msg.sender] += 1
-    }
+    //reward according to your choice
+    if (result == keccak256("bird"))
+      account[msg.sender] += 10
+  }
 
-
- //other code
- ....
+  //other code
+  ....
 }
 		</pre>
-                <div class="row">
+		<p>Upload Image <small>(.png .jpg .jpeg, size &lt; 200K)</small></p>
+		<input type="file" accept="image/png,image/jpg,image/jpeg" id="imgInput">
+		<hr>
+		<p>Model : resnet152</p>
+                <div class="row" style="display: none">
                     <label class="col-xs-4" onclick="getInput('327e12772d8d08bd5ef1936b58e445535dbef23da3b8001a0eed01efa8e50de0')">
 			<img src="static/images/1.png" alt=""><input type="radio" name="input" checked>
 		    </label>
@@ -101,7 +101,7 @@ contract DefaultContract{
 			<img src="static/images/3.png" alt=""><input type="radio" name="input">
 		    </label>
                 </div>
-                <div class="row" style="margin: 15px -15px">
+                <div class="row" style="margin: 15px -15px;display: none">
                     <label class="col-xs-4" onclick="getModel('6d4bd32d506d845101b5a2da140a4ce69dafa1035958d7344fd22f842ee1c2b3')">
                         <input type="radio" name="model" checked> vgg16
                     </label>

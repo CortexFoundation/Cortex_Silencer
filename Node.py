@@ -1,3 +1,5 @@
+import hashlib
+import imghdr
 from flask import Flask, request, render_template_string, render_template,url_for,redirect,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import login_required, UserManager, UserMixin
@@ -110,9 +112,10 @@ class Node:
             if request.method == 'POST':
                 # On each new POST request,
                 # we extract the transaction data
-                new_txion=request.get_json(force=True)
+                new_txion=request.get_json()
                 if not new_txion:
-                    new_txion=json.load(request.files["json"])
+                    new_txion=json.loads(request.form["parma"])
+                print new_txion
                 assert("nonce" in new_txion.keys())
                 assert("from" in new_txion.keys())
                 # print new_txion
@@ -169,7 +172,20 @@ class Node:
                     assert("contract_address" in new_txion.keys())
                 #call specific contract Default Contract
                 elif contractType == "call":
-                    assert("input" in new_txion.keys())
+                    
+                    f = request.files["file"]
+                    ff = f.read()
+                    try:
+                        ty = imghdr.what(None,h=ff)
+                    except Exception as ex:
+                        return jsonify({"msg": "err", "info": "must be image type"})
+                    if ty!="png" and ty!="jpg" and ty!="jpeg":
+                        return jsonify({"msg": "err", "info": "must be image type"})
+                    img_key = hashlib.sha256(ff).hexdigest()
+                    new_txion["input"] = img_key+"."+ty
+                    p = os.path.join("input_data",new_txion["input"])
+                    f.seek(0)
+                    f.save(p)
                     assert("model" in new_txion.keys())
                 #create new contract
                 elif contractType == "contract_create":
@@ -251,4 +267,4 @@ if __name__ == "__main__":
     mine_thread = threading.Thread(target=mine,args=(node,))
     mine_thread.setDaemon(True)
     mine_thread.start()
-    node.node.run(host='0.0.0.0')
+    node.node.run(host='0.0.0.0',port=5001)

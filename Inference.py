@@ -35,11 +35,16 @@ def parse_js(expr):
 class Inference:
     def __init__(self,config):
         #map define each class name
-        self.map = open("map_clsloc.txt",'r').read()
-        self.map = self.map.split('\n')
-        for i in range(len(self.map)-1):
-            self.map[i] = self.map[i].split(' ')[2]
-        self.map = parse_js(open("gistfile1.txt",'r').read())
+        #self.map = open("map_clsloc.txt",'r').read()
+        #self.map = self.map.split('\n')
+        #for i in range(len(self.map)-1):
+        #    self.map[i] = self.map[i].split(' ')[2]
+        #self.map = parse_js(open("gistfile1.txt",'r').read())
+        tt = open("map.txt",'r').readlines()
+        self.map = []
+        for i in tt:
+            a = i.split(' ')
+            self.map.append(a[1].strip())
         self.batchsize = config["batchsize"]
         self.model_names = config["models"]
         self.img_dir = config["img_dir"]
@@ -172,8 +177,11 @@ class Inference:
         json.dump(self.gpu_infer_time,open(os.path.join(self.result_dir,"gpu_infer_time_%d.json"%self.batchsize),'w'),indent=2)
     #test single inference
     def testSingleInference(self,model,data,t="cpu"):
-        if model not in self.model_list.keys():
-            mod,load_model_time = self.loadModel(os.path.join(model),type=t)
-            self.model_list[model] = mod
+        try:
+            if model not in self.model_list.keys():
+                mod,load_model_time = self.loadModel(os.path.join(model),type=t)
+                self.model_list[model] = mod
+        except Exception as ex:
+                return "error"+str(ex)
         return str(self.predictSingle(data,self.model_list[model])[0])
             
