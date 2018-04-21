@@ -1,5 +1,11 @@
 # Cortex_Silencer
-This repo is the proof of concept
+This is a demonstration to show Cortex project structure. It is a small but working prototype to show:
+How to generate blocks;
+How to call AI computational heavy functions  within smart contracts;
+How the CVM was abstracted placed in the framework;
+How the DAIApps would be developed.
+
+The repository will be continuously updated along with the formal version of the development.
 
 ## Environment
 
