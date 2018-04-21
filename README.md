@@ -28,5 +28,5 @@ This repo is the proof of concept
 ## How to run
 * python Node.py
 
-
-
+## Testing machine
+<img src="testing_machine.JPG" width = "50%" height = "50%" alt="Testing machine" align=center />
