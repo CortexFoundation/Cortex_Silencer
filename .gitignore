@@ -1,5 +1,7 @@
 *.pyc
 .DS_store
 /blockchain
+/front-end/build
+/front-end/node_modules
 .vscode/*
 
