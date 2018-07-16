@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <b-container class="bv-example-row">
+    <b-container>
       <b-row>
         <upload/>
       </b-row>
@@ -13,8 +13,12 @@ import Upload from './components/Upload'
 
 export default {
   name: 'App',
+  data () {
+    return {
+    }
+  },
   components: {
-    Upload
+    Upload,
   }
 }
 </script>

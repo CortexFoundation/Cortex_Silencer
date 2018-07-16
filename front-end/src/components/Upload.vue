@@ -19,7 +19,7 @@
         <b-form-file v-model="file" class="mt-3"></b-form-file>
         <b-button @click="clear()" >Clear</b-button>
         <b-button variant="primary" @click="upload(file)" >Upload</b-button>
-        <b-alert :key="input_data" v-for="input_data in input_datas" show variant="light" class="form-message">
+        <b-alert :key="index" v-for="(input_data, index) in input_datas" show variant="light" class="form-message">
           <h4 class="alert-heading">Well done!</h4>
           <p>payload: {{ input_data && input_data.msg }}</p>
           <b-button variant="secondary" @click="getTransaction(input_data)" >Get Transaction</b-button>
@@ -33,7 +33,7 @@
 </template>
 
 <script>
-import * as RLP from "RLP";
+import * as RLP from "rlp";
 import { Buffer } from "safe-buffer";
 
 function parseHexString(str) {
@@ -107,14 +107,15 @@ export default {
           return ret.msg;
         })
         .then((msg) => {
-          this.web3.eth.sendTransaction({
+          const transaction = {
             to: null,
             from: web3.eth.coinbase,
             gasPrice: 1000000000,
             gas: 2100000,
             value: 0,
-            input: msg,
-          }, (err, transactionHash) => {
+            data: msg,
+          };
+          this.web3.eth.sendTransaction(transaction, (err, transactionHash) => {
             ret.transactionHash = transactionHash;
             this.input_datas.push(ret);
           });
