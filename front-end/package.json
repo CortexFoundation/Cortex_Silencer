@@ -17,6 +17,8 @@
     "vue": "^2.5.2",
     "vue-fixed-header": "^1.0.1",
     "vue-resource": "^1.5.1",
+    "vue-tabs-component": "^1.4.0",
+    "vuetable": "^1.5.12",
     "web3": "^1.0.0-beta.34"
   },
   "devDependencies": {
@@ -32,6 +34,7 @@
     "chalk": "^2.0.1",
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.28.0",
+    "es6-promisify": "^6.0.0",
     "extract-text-webpack-plugin": "^3.0.0",
     "file-loader": "^1.1.4",
     "friendly-errors-webpack-plugin": "^1.6.1",
