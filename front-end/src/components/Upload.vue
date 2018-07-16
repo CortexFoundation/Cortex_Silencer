@@ -23,8 +23,9 @@
           <h4 class="alert-heading">Well done!</h4>
           <p>payload: {{ input_data && input_data.msg }}</p>
           <b-button variant="secondary" @click="getTransaction(input_data)" >Get Transaction</b-button>
-          <b-table hover :items="Object.entries(input_data.transaction || {})"></b-table>
-          <p>receipt: {{ input_data && input_data.receipt }} </p>
+          <b-table v-if="input_data && input_data.transaction" hover :items="Object.entries(input_data.transaction || {})"></b-table>
+          <b-button variant="secondary" @click="getTransactionReceipt(input_data)" >Get Transaction Receipt</b-button>
+          <p v-if="input_data && input_data.receipt">receipt: {{ input_data && input_data.receipt }} </p>
         </b-alert>
       </template>
     </b-jumbotron>
@@ -78,13 +79,15 @@ export default {
     clear() {
       return;
     },
+    getTransactionReceipt(data) {
+      this.web3.eth.getTransactionReceipt(data.transaction.hash, (err, receipt) => {
+        data.receipt = receipt;
+      });
+    },
     getTransaction(data) {
-      web3.eth.getTransaction(data.transactionHash,
+      this.web3.eth.getTransaction(data.transactionHash,
         (err, transaction) => {
           data.transaction = transaction;
-          web3.eth.getTransactionReceipt(transaction.hash, (err, receipt) => {
-            data.receipt = receipt;
-          });
         });
     },
     upload(file) {
@@ -104,7 +107,7 @@ export default {
           return ret.msg;
         })
         .then((msg) => {
-          web3.eth.sendTransaction({
+          this.web3.eth.sendTransaction({
             to: null,
             from: web3.eth.coinbase,
             gasPrice: 1000000000,
