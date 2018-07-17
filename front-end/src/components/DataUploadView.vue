@@ -12,6 +12,20 @@
                     class="mt-3">
         </b-form-file>
       </b-form-group>
+      <b-card v-if="form.file">
+        <b-row class="mb-2">
+          <b-col sm="3" class="text-sm-right"><b>Last Modified:</b></b-col>
+          <b-col>{{ new Date(form.file.lastModified).toJSON().slice(0, 19).replace('T', ' ') }}</b-col>
+        </b-row>
+        <b-row class="mb-2">
+          <b-col sm="3" class="text-sm-right"><b>File Size:</b></b-col>
+          <b-col>{{ form.file.size }} bytes</b-col>
+        </b-row>
+        <b-row class="mb-2">
+          <b-col sm="3" class="text-sm-right"><b>File Type:</b></b-col>
+          <b-col>{{ form.file.type }}</b-col>
+        </b-row>
+      </b-card>
       <b-form-group>
         <b-form-radio-group id="TypeRadios" v-model="selectedType" name="radioSubComponent">
           <b-form-radio value="input_data">Input data</b-form-radio>
@@ -22,8 +36,56 @@
       <b-button @click="onReset" variant="danger">Reset</b-button>
     </b-form>
     <hr class="my-4">
-    <h5>Data / Model</h5>
-    <b-table striped hover :fields="fields" :items="items"></b-table>
+    <h5>Data</h5>
+    <b-table striped hover small :fields="fields" :items="items">
+      <template slot="hash" slot-scope="row">
+        <p class="transaction_table_item" @click="row.toggleDetails">
+        {{ row.item.hash }}
+        </p>
+      </template>
+      <template slot="contractAddress" slot-scope="row">
+        <p class="transaction_table_item" @click="row.toggleDetails">
+        {{ row.item.contractAddress }}
+        </p>
+      </template>
+      <template slot="row-details" slot-scope="row">
+        <b-card>
+          <b-row class="mb-2">
+            <b-col sm="3" class="text-sm-right"><b>Block Hash:</b></b-col>
+            <b-col>{{ row.item.blockHash }}</b-col>
+          </b-row>
+          <b-row class="mb-2">
+            <b-col sm="3" class="text-sm-right"><b>Block Number:</b></b-col>
+            <b-col>{{ row.item.blockNumber }}</b-col>
+          </b-row>
+          <b-row class="mb-2">
+            <b-col sm="3" class="text-sm-right"><b>Transaction Hash:</b></b-col>
+            <b-col>{{ row.item.hash }}</b-col>
+          </b-row>
+          <b-row class="mb-2">
+            <b-col sm="3" class="text-sm-right"><b>Transaction Index:</b></b-col>
+            <b-col>{{ row.item.transactionIndex }}</b-col>
+          </b-row>
+          <b-row class="mb-2">
+            <b-col sm="3" class="text-sm-right"><b>From:</b></b-col>
+            <b-col>{{ row.item.from }}</b-col>
+          </b-row>
+          <b-row class="mb-2">
+            <b-col sm="3" class="text-sm-right"><b>Gas Used:</b></b-col>
+            <b-col>{{ row.item.gasUsed }}</b-col>
+          </b-row>
+          <b-row class="mb-2">
+            <b-col sm="3" class="text-sm-right"><b>Contract Address:</b></b-col>
+            <b-col>{{ row.item.contractAddress }}</b-col>
+          </b-row>
+          <b-row class="mb-2">
+            <b-col sm="3" class="text-sm-right"><b>Status:</b></b-col>
+            <b-col>{{ row.item.status ? 'Success' : 'Fail' }}</b-col>
+          </b-row>
+          <b-button size="sm" @click="row.toggleDetails">Hide Details</b-button>
+        </b-card>
+      </template>
+    </b-table>
   </div>
 </template>
 
@@ -81,7 +143,19 @@ export default {
       selectedType: 'input_data',
       show: true,
       items: [],
-      fields: ['Type', 'Transaction Hash', 'Block Number', 'Contract Address'],
+      fields: [{
+        label: 'Block Number',
+        key: 'blockNumber',
+      }, {
+        label: 'File Type',
+        key: 'type',
+      }, {
+        label: 'Transaction Hash',
+        key: 'hash',
+      }, {
+        label: 'Contract Address',
+        key: 'contractAddress',
+      }],
     };
   },
   methods: {
@@ -109,19 +183,26 @@ export default {
       };
       transaction.gasPrice = await this.web3.eth.getGasPrice();
       transaction.gas = await this.web3.eth.estimateGas({data: payload});
-
       const receipt = await this.web3.eth.sendTransaction(transaction, async (err, hash) => {
         transaction = await this.web3.eth.getTransaction(hash);
         this.items.push({
-          'Type': parma.type == 'model_data' ? 'model' : 'input',
-          'Transaction Hash': transaction.hash,
-          'Block Number': '',
-          'Contract Address': '',
+          'type': this.form.file.type,
+          'size': this.form.file.size,
+          'timestamp': this.form.file.lastModified,
+          'hash': transaction.hash,
+          'blockNumber': '',
+          'contractAddress': '',
         });
+        this.form.file = null;
       });
-      const item = this.items.find((d) => d['Transaction Hash'] == transaction.hash);
-      item['Block Number'] = receipt.blockNumber;
-      item['Contract Address'] = receipt.contractAddress;
+      const item = this.items.find((d) => d.hash == transaction.hash);
+      item.blockNumber = receipt.blockNumber;
+      item.blockHash = receipt.blockHash;
+      item.gasUsed = receipt.gasUsed;
+      item.from = receipt.from;
+      item.status = receipt.status;
+      item.transactionIndex = receipt.transactionIndex;
+      item.contractAddress = receipt.contractAddress.toLowerCase();
     },
     onReset (evt) {
       evt.preventDefault();
@@ -168,6 +249,12 @@ export default {
 }
 .b-form-group {
   margin-top: 2em;
+}
+
+.transaction_table_item {
+  text-overflow:ellipsis;
+  overflow:hidden;
+  white-space:nowrap;
 }
 
 </style>
