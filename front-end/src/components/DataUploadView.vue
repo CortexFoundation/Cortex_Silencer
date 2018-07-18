@@ -1,5 +1,6 @@
 <template>
   <div class="upload-form">
+    <h5>File</h5>
     <b-form v-if="show">
       <b-form-group id="InputGroup"
                     label="Select file to upload:"
@@ -14,16 +15,16 @@
       </b-form-group>
       <b-card v-if="form.file">
         <b-row class="mb-2">
-          <b-col sm="3" class="text-sm-right"><b>Last Modified:</b></b-col>
-          <b-col>{{ new Date(form.file.lastModified).toJSON().slice(0, 19).replace('T', ' ') }}</b-col>
-        </b-row>
-        <b-row class="mb-2">
           <b-col sm="3" class="text-sm-right"><b>File Size:</b></b-col>
           <b-col>{{ form.file.size }} bytes</b-col>
         </b-row>
         <b-row class="mb-2">
           <b-col sm="3" class="text-sm-right"><b>File Type:</b></b-col>
           <b-col>{{ form.file.type }}</b-col>
+        </b-row>
+        <b-row class="mb-2">
+          <b-col sm="3" class="text-sm-right"><b>Last Modified:</b></b-col>
+          <b-col>{{ new Date(form.file.lastModified).toJSON().slice(0, 19).replace('T', ' ') }}</b-col>
         </b-row>
       </b-card>
       <b-form-group>
@@ -37,7 +38,7 @@
     </b-form>
     <hr class="my-4">
     <h5>Data</h5>
-    <b-table striped hover small :fields="fields" :items="items">
+    <b-table striped hover small :fields="fields" :items="items" class="transaction_table" v-if="items.length > 0">
       <template slot="hash" slot-scope="row">
         <p class="transaction_table_item" @click="row.toggleDetails">
         {{ row.item.hash }}
@@ -86,6 +87,7 @@
         </b-card>
       </template>
     </b-table>
+    <h5 v-else class="transaction_table none"> No record </h5>
   </div>
 </template>
 
@@ -150,6 +152,9 @@ export default {
         label: 'File Type',
         key: 'type',
       }, {
+        label: 'File Size',
+        key: 'size',
+      }, {
         label: 'Transaction Hash',
         key: 'hash',
       }, {
@@ -213,48 +218,24 @@ export default {
       this.show = false;
       this.$nextTick(() => { this.show = true });
     },
-    getTransactionReceipt(data) {
-      this.web3.eth.getTransactionReceipt(data.transaction.hash, (err, receipt) => {
-        data.receipt = receipt;
-      });
-    },
   }
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.upload-form {
-  width: 100%;
-  margin-top: 2em;
-  margin-bottom: 2em;
-}
-
-.form-content {
-  width: 100%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-}
-
-.form-message {
-  margin-top: 2em;
-  margin-bottom: 2em;
-}
-
-.custom-file-label {
-  border-color: lightgray !important;
-}
-
-.b-form-file {
-  margin-bottom: 1em;
-}
-.b-form-group {
-  margin-top: 2em;
-}
 
 .transaction_table_item {
   text-overflow:ellipsis;
   overflow:hidden;
   white-space:nowrap;
+  max-width: 300px;
+}
+
+.transaction_table.none {
+  text-align:center;
+  padding: 2em;
+  color: #a0a0a0;
 }
 
 </style>

@@ -9,8 +9,11 @@ Vue.use(VueResource);
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+import Router from 'vue-router'
+Vue.use(Router)
 
 import { Tabs, Tab } from 'vue-tabs-component'
+import router from './router'
 import App from './App'
 import Web3 from 'web3'
 
@@ -28,6 +31,7 @@ Vue.component('tab', Tab);
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
+  router,
   components: { App },
   template: '<App/>'
 })

@@ -21,6 +21,33 @@
                       placeholder="Enter address">
         </b-form-input>
       </b-form-group>
+      <b-form-group id="InputGroup3"
+                    label="Contract:"
+                    label-for="contractInput">
+        <b-form-textarea id="contractInput"
+                      type="text"
+                      v-model="form.contract"
+                      placeholder="Enter contract">
+        </b-form-textarea>
+      </b-form-group>
+      <b-form-group id="InputGroup4"
+                    label="Model:"
+                    label-for="modelInput">
+        <b-form-input id="modelInput"
+                      type="text"
+                      v-model="form.model"
+                      placeholder="Enter model">
+        </b-form-input>
+      </b-form-group>
+      <b-form-group id="InputGroup5"
+                    label="Data:"
+                    label-for="dataInput">
+        <b-form-input id="dataInput"
+                      type="text"
+                      v-model="form.contract"
+                      placeholder="Enter data">
+        </b-form-input>
+      </b-form-group>
       <b-button type="submit" variant="primary">Submit</b-button>
       <b-button type="reset" variant="danger">Reset</b-button>
     </b-form>
@@ -68,6 +95,9 @@ export default {
         file: null,
         sender: this.web3.eth.coinbase,
         recipient: null,
+        contract: null,
+        model: null,
+        data: null,
       },
       show: true
     };
@@ -99,31 +129,4 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.upload-form {
-  width: 100%;
-  margin-top: 2em;
-  margin-bottom: 2em;
-}
-
-.form-content {
-  width: 100%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-}
-
-.form-message {
-  margin-top: 2em;
-  margin-bottom: 2em;
-}
-
-.custom-file-label {
-  border-color: lightgray !important;
-}
-
-.b-form-file {
-  margin-bottom: 1em;
-}
-.b-form-group {
-  margin-top: 2em;
-}
-
 </style>
