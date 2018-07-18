@@ -31,25 +31,11 @@ export default {
   name: "Home",
   data() {
     return {
-      user: { name: '', key: null },
-      input_username: '',
-      input_password: '',
-      view: 'signin',
     };
   },
   components: {
     DataUploadView,
     CallContractView
-  },
-  computed: {
-    nameState () {
-      return usernamePattern.test(this.input_username);
-    },
-    passwordState () {
-      return passwordPattern.test(this.input_password);
-    }
-  },
-  methods: {
   },
 };
 </script>
@@ -142,7 +128,7 @@ export default {
     background-color: #fff;
     border: solid 1px #ddd;
     border-radius: 0 6px 6px 6px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
     padding: 4em 2em;
   }
 }

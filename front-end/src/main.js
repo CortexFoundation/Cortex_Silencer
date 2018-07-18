@@ -18,8 +18,8 @@ import App from './App'
 import Web3 from 'web3'
 
 if (typeof web3 !== 'undefined') {
-  Vue.prototype._web3 = web3;
   Vue.prototype.web3 = new Web3(web3.currentProvider);
+  Vue.prototype.web3.eth.defaultAccount = web3.eth.defaultAccount;
 } else {
   Vue.prototype.web3 = new Web3(new Web3.providers.HttpProvider("http://192.168.5.11:8845"));
 }

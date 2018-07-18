@@ -8,10 +8,11 @@
         <b-form-input id="senderAddrInput"
                       type="text"
                       v-model="form.sender"
-                      required
+                      disabled
                       placeholder="Enter address">
         </b-form-input>
       </b-form-group>
+      <!--
       <b-form-group id="InputGroup2"
                     label="Recipient:"
                     label-for="recipientAddrInput">
@@ -21,37 +22,56 @@
                       placeholder="Enter address">
         </b-form-input>
       </b-form-group>
+      !-->
       <b-form-group id="InputGroup3"
                     label="Contract:"
                     label-for="contractInput">
         <b-form-textarea id="contractInput"
                       type="text"
                       v-model="form.contract"
+                      disabled
                       placeholder="Enter contract">
         </b-form-textarea>
       </b-form-group>
       <b-form-group id="InputGroup4"
-                    label="Model:"
-                    label-for="modelInput">
-        <b-form-input id="modelInput"
-                      type="text"
-                      v-model="form.model"
-                      placeholder="Enter model">
-        </b-form-input>
+                    label="Model data:"
+                    label-for="modelInput">  
+        <b-input-group>
+          <b-form-input id="modelInput"
+                        type="text"
+                        v-model="form.model_addr"
+                        placeholder="Enter model data address">
+          </b-form-input>
+          <b-dropdown text="select" variant="outline-secondary" slot="append" right>
+            <b-dropdown-item :key="item.hash" v-for="item in model_data" @click="form.model_addr = item.contractAddress">
+              {{ item.contractAddress }}
+            </b-dropdown-item>
+          </b-dropdown>
+        </b-input-group>
       </b-form-group>
       <b-form-group id="InputGroup5"
-                    label="Data:"
+                    label="Input data:"
                     label-for="dataInput">
-        <b-form-input id="dataInput"
-                      type="text"
-                      v-model="form.contract"
-                      placeholder="Enter data">
-        </b-form-input>
+        <b-input-group>
+          <b-form-input id="dataInput"
+                        type="text"
+                        v-model="form.input_addr"
+                        placeholder="Enter input data address">
+          </b-form-input>
+          <b-dropdown text="select" variant="outline-secondary" slot="append" right>
+            <b-dropdown-item :key="item.hash" v-for="item in input_data" @click="form.input_addr = item.contractAddress">
+              {{ item.contractAddress }}
+            </b-dropdown-item>
+          </b-dropdown>
+        </b-input-group>
       </b-form-group>
-      <b-button type="submit" variant="primary">Submit</b-button>
+      <b-button type="submit" variant="primary">Call</b-button>
       <b-button type="reset" variant="danger">Reset</b-button>
     </b-form>
     <hr class="my-4">
+    <b-card>
+      {{ result }}
+    </b-card>
   </div>
 </template>
 
@@ -59,6 +79,7 @@
 import * as RLP from "rlp";
 import { Buffer } from "safe-buffer";
 import { promisify } from "es6-promisify";
+import bus from "@/components/bus";
 
 function parseHexString(str) {
   var result = [];
@@ -89,25 +110,56 @@ export default {
   name: "CallContractView",
   data() {
     return {
-      msg: null,
-      input_datas: [],
+      result: null,
+      input_data: [],
+      model_data: [],
       form: {
         file: null,
-        sender: this.web3.eth.coinbase,
+        sender: this.web3.eth.defaultAccount.toLowerCase(),
         recipient: null,
-        contract: null,
-        model: null,
-        data: null,
+        contract: `contract DemoSmartContract { 
+  mapping(address=>uint) account;
+
+  //other code
+  ....
+ 
+  //classify type of picture
+  function animalClassification(address input, address model){
+    //get infer result
+    var result = keccak256(infer(input, model));
+
+    //reward according to your choice
+    if (result == keccak256("bird"))
+      account[msg.sender] += 10
+  }
+
+  //other code
+  ....
+}
+	`,
+        model_addr: null,
+        input_addr: null,
       },
       show: true
     };
   },
+  mounted() {
+    bus.$on('data_update', (val) => {
+      this.input_data = val.filter(d => d.type == 'input_data');
+      this.model_data = val.filter(d => d.type == 'model_data');
+    });
+  },
   methods: {
     async onSubmit(evt) {
       var formdata = new FormData();
-      formdata.append("file", this.form.file);
-      var parma = { type: "input_data", author: web3.eth.defaultAccount };
+      var parma = { input_addr: form.input_addr, model_addr: form.model_addr };
       formdata.append("json", new Blob([JSON.stringify(parma)], { type: "application/json" }));
+      const response = await this.$http.post(
+        "http://192.168.5.11:5002/infer",
+        formdata,
+        { emulateJSON: true }
+      );
+      this.result = response;
     },
     onReset (evt) {
       evt.preventDefault();
@@ -117,12 +169,7 @@ export default {
       this.form.file = null;
       this.show = false;
       this.$nextTick(() => { this.show = true });
-    },
-    getTransactionReceipt(data) {
-      this.web3.eth.getTransactionReceipt(data.transaction.hash, (err, receipt) => {
-        data.receipt = receipt;
-      });
-    },
+    }
   }
 };
 </script>

@@ -7,12 +7,12 @@
       </b-navbar-brand>
       <b-collapse is-nav id="nav_collapse">
         <b-navbar-nav class="ml-auto">
-          <b-nav-item-dropdown right v-if="user.key">
+          <b-nav-item-dropdown right v-if="true">
             <template slot="button-content">
-              <em>{{ user.name }}</em>
+              <em>{{ web3.eth.defaultAccount.toLowerCase() }}</em>
             </template>
             <b-dropdown-item href="#">Profile</b-dropdown-item>
-            <b-dropdown-item href="#">Signout</b-dropdown-item>
+            <b-dropdown-item @click="user.key = null" href="#">Signout</b-dropdown-item>
           </b-nav-item-dropdown>
           <template v-else>
             <b-nav-item href="#" @click="$router.replace('/login')">Sign in</b-nav-item>
@@ -26,6 +26,7 @@
 </template>
 
 <script>
+import bus from "./components/bus"
 export default {
   name: 'App',
   data() {
@@ -34,7 +35,11 @@ export default {
     };
   },
   created() {
-    this.user = sessionStorage['cortex_silencer_test_user'] || this.user;
+    this.user = sessionStorage['cortex_current_user'] || this.user;
+    bus.$on("login", (username, key) => {
+      this.user.name = username;
+      this.user.key = key;
+    })
   }
 }
 </script>
