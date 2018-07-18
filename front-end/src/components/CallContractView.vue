@@ -152,7 +152,7 @@ export default {
   methods: {
     async onSubmit(evt) {
       var formdata = new FormData();
-      var parma = { input_addr: form.input_addr, model_addr: form.model_addr };
+      var parma = { input_addr: this.form.input_addr, model_addr: this.form.model_addr };
       formdata.append("json", new Blob([JSON.stringify(parma)], { type: "application/json" }));
       const response = await this.$http.post(
         "http://192.168.5.11:5002/infer",
