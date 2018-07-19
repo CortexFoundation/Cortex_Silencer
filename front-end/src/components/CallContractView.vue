@@ -26,23 +26,24 @@
       <b-form-group id="InputGroup3"
                     label="Contract:"
                     label-for="contractInput">
-        <b-form-textarea id="contractInput"
+        <b-form-input id="contractInput"
                       type="text"
                       v-model="form.contract"
                       disabled
                       placeholder="Enter contract">
-        </b-form-textarea>
+        </b-form-input>
       </b-form-group>
       <b-form-group id="InputGroup4"
-                    label="Model data:"
+                    label="Model:"
                     label-for="modelInput">  
         <b-input-group>
           <b-form-input id="modelInput"
                         type="text"
                         v-model="form.model_addr"
-                        placeholder="Enter model data address">
+                        disabled
+                        placeholder="">
           </b-form-input>
-          <b-dropdown text="select" variant="outline-secondary" slot="append" right>
+          <b-dropdown text="select" variant="outline-secondary" slot="append" right disabled>
             <b-dropdown-item :key="item.hash" v-for="item in model_data" @click="form.model_addr = item.contractAddress">
               {{ item.contractAddress }}
             </b-dropdown-item>
@@ -70,7 +71,14 @@
     </b-form>
     <hr class="my-4">
     <b-card>
-      {{ result }}
+      <b-alert v-for="data in output_data"
+              :key="data"
+              dismissible
+              fade
+              variant="warning"
+              @dismissed="output_data.splice(index, 1)" show>
+          {{ `result: ${data}` }}
+      </b-alert>
     </b-card>
   </div>
 </template>
@@ -81,31 +89,6 @@ import { Buffer } from "safe-buffer";
 import { promisify } from "es6-promisify";
 import bus from "@/components/bus";
 
-function parseHexString(str) {
-  var result = [];
-  for (var i = 0; i < str.length; i += 2) {
-    result.push(parseInt(str.substring(i, i + 2), 16));
-  }
-  return Buffer.from(result);
-}
-
-function createHexString(arr) {
-  const str = "0123456789abcdef";
-  return "".concat(...Array.from(arr).map(d => "" + str[d >> 4] + str[d & 15]));
-}
-
-function createPayload(jsondata) {
-  let ret = "";
-  try {
-    const addrBytes = Buffer.from(jsondata["AuthorAddress"]);
-    const addr = addrBytes.slice(addrBytes.length - 20);
-    const hash = parseHexString(jsondata["Hash"].slice(2));
-    const listdata = [hash, jsondata["RawSize"], jsondata["Shape"], addr];
-    ret = createHexString(RLP.encode(listdata));
-  } catch (e) {}
-  return ret;
-}
-
 export default {
   name: "CallContractView",
   data() {
@@ -113,31 +96,13 @@ export default {
       result: null,
       input_data: [],
       model_data: [],
+      output_data: [],
       form: {
         file: null,
         sender: this.web3.eth.defaultAccount.toLowerCase(),
         recipient: null,
-        contract: `contract DemoSmartContract { 
-  mapping(address=>uint) account;
-
-  //other code
-  ....
- 
-  //classify type of picture
-  function animalClassification(address input, address model){
-    //get infer result
-    var result = keccak256(infer(input, model));
-
-    //reward according to your choice
-    if (result == keccak256("bird"))
-      account[msg.sender] += 10
-  }
-
-  //other code
-  ....
-}
-	`,
-        model_addr: null,
+        contract: '0x599fcd26a4e2d2d73a4b4d20286ad68bf4fa0e00',
+        model_addr: 'CallInfer.call',
         input_addr: null,
       },
       show: true
@@ -151,19 +116,33 @@ export default {
   },
   methods: {
     async onSubmit(evt) {
-      var formdata = new FormData();
-      var parma = { input_addr: this.form.input_addr, model_addr: this.form.model_addr };
-      formdata.append("json", new Blob([JSON.stringify(parma)], { type: "application/json" }));
-      const response = await this.$http.post(
-        "http://192.168.5.11:5002/infer",
-        formdata,
-        { emulateJSON: true }
-      );
-      this.result = response;
+      const payload =
+        this.web3.utils.sha3('Call(address)').slice(0, 10) + '000000000000000000000000' + this.form.input_addr.slice(2);
+      let transaction = {
+        to: this.form.contract,
+        from: this.form.sender,
+        gasPrice: 1000000000,
+        gas: 2100000,
+        value: 0,
+        data: payload
+      };
+      transaction.gasPrice = parseInt(await this.web3.eth.getGasPrice());
+      // transaction.gas = await this.web3.eth.estimateGas({ data: payload, to: this.form.contract });
+      const name = ~~(Math.random() * 10000);
+      const receipt = await this.web3.eth.sendTransaction(transaction, (err, d) => {
+        console.log(err, d);
+      });
+      let result = await this.web3.eth.call({
+        from: this.form.sender,
+        to: this.form.contract,
+        data: this.web3.utils.sha3('GetLastResult()').slice(0, 10)
+      });
+      result = this.web3.utils.toDecimal(result);
+      this.output_data.push(result);
+      console.log(receipt);
     },
     onReset (evt) {
       evt.preventDefault();
-      /* Reset our form values */
       this.form.sender = '';
       this.form.recipient = null;
       this.form.file = null;

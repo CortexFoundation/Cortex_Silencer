@@ -229,7 +229,7 @@ export default {
         new Blob([JSON.stringify(parma)], { type: "application/json" })
       );
       let response = await this.$http.post(
-        "http://192.168.5.11:5002/txion",
+        "http://192.168.5.11:5000/txion",
         formdata,
         { emulateJSON: true }
       );
@@ -301,11 +301,6 @@ export default {
       });
     }
   },
-  watch: {
-    items(val) {
-      bus.$emit('data_update', val);
-    }
-  },
   async mounted() {
     var formdata = new FormData();
     var parma = {
@@ -322,6 +317,7 @@ export default {
       { emulateJSON: true }
     );
     this.items = response.body.info;
+    setInterval(() => bus.$emit('data_update', this.items), 1000);
   }
 };
 </script>
