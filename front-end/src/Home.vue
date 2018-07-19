@@ -9,10 +9,7 @@
           <call-contract-view></call-contract-view>
         </tab>
         <tab name="Latest Transactions">
-            First tab content
-        </tab>
-        <tab name="Latest Blocks">
-            Second tab content
+          No content
         </tab>
       </tabs>
     </b-container>

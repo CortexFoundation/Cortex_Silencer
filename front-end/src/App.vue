@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <b-navbar class="cortex-header" toggleable="md" type="dark" variant="dark">
-      <b-navbar-brand @click="$router.replace('/')" href="#">
+      <b-navbar-brand @click="$router.replace('/')">
         <img src="./assets/logo.png" style="hegith: 28px; width: 28px;">
         Cortex
       </b-navbar-brand>
@@ -12,7 +12,6 @@
               <em>{{ web3.eth.defaultAccount.toLowerCase() }}</em>
             </template>
             <b-dropdown-item href="#">Profile</b-dropdown-item>
-            <b-dropdown-item @click="user.key = null" href="#">Signout</b-dropdown-item>
           </b-nav-item-dropdown>
           <template v-else>
             <b-nav-item href="#" @click="$router.replace('/login')">Sign in</b-nav-item>
