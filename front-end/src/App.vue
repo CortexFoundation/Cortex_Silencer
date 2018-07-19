@@ -3,7 +3,7 @@
     <b-navbar class="cortex-header" toggleable="md" type="dark" variant="dark">
       <b-navbar-brand @click="$router.replace('/')">
         <img src="./assets/logo.png" style="hegith: 28px; width: 28px;">
-        Cortex
+        Cortex DApp Demo
       </b-navbar-brand>
       <b-collapse is-nav id="nav_collapse">
         <b-navbar-nav class="ml-auto">
