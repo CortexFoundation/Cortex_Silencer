@@ -17,6 +17,10 @@ import router from './router'
 import App from './App'
 import Web3 from 'web3'
 
+import WebTorrent from 'WebTorrent'
+
+Vue.prototype.torrentClient = new WebTorrent({ tracker: false })
+
 if (typeof web3 !== 'undefined') {
   Vue.prototype.web3 = new Web3(web3.currentProvider);
   Vue.prototype.web3.eth.defaultAccount = web3.eth.defaultAccount;

@@ -2,5 +2,6 @@
 .DS_store
 /blockchain
 /front-end/node_modules
+/front-end/dist
 .vscode/*
 

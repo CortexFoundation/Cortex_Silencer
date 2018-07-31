@@ -125,6 +125,7 @@ import * as RLP from "rlp";
 import bus from "@/components/bus";
 import { Buffer } from "safe-buffer";
 import { promisify } from "es6-promisify";
+import create_torrent from "create-torrent";
 
 function parseHexString(str) {
   var result = [];
@@ -214,11 +215,15 @@ export default {
     async onSubmit(evt) {
       var formdata = new FormData();
 
+      const files = [];
       if (this.selectedType == "input_data") {
         formdata.append("file", this.form.file);
+        files.push(this.form.file);
       } else {
         formdata.append("params_file", this.form.file);
         formdata.append("json_file", this.form.file2);
+        files.push(this.form.file);
+        files.push(this.form.file2);
       }
       var parma = {
         type: this.selectedType,
@@ -228,6 +233,9 @@ export default {
         "json",
         new Blob([JSON.stringify(parma)], { type: "application/json" })
       );
+      const torrent = await this.torrentClient.seed(files);
+      console.log(files, torrent, torrent.magnetURI);
+
       let response = await this.$http.post(
         "http://192.168.5.11:5000/txion",
         formdata,

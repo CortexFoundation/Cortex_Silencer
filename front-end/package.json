@@ -12,6 +12,7 @@
   "dependencies": {
     "ajv": "^6.5.2",
     "bootstrap-vue": "^2.0.0-rc.11",
+    "create-torrent": "^3.32.1",
     "jquery": "^3.3.1",
     "rlp": "^2.1.0",
     "stf-vue-select": "^0.1.11",
@@ -21,7 +22,8 @@
     "vue-router": "^3.0.1",
     "vue-tabs-component": "^1.4.0",
     "vuetable": "^1.5.12",
-    "web3": "^1.0.0-beta.34"
+    "web3": "^1.0.0-beta.34",
+    "webtorrent": "^0.101.2"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
